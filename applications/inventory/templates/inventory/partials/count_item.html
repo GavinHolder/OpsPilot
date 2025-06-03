@@ -1,0 +1,36 @@
+{% load static %}
+
+<tr class="{% if item.system_quantity != item.counted_quantity %}table-warning{% endif %}">
+    <td>
+        <div class="d-flex align-items-center">
+            <span class="company-badge company-{{ item.item.company }} me-2">{{ item.item.get_company_display }}</span>
+            <div>
+                <a href="{% url 'inventory:item_detail' item.item.pk %}">{{ item.item.name }}</a>
+                {% if item.item.sku %}
+                    <div class="small text-muted">SKU: {{ item.item.sku }}</div>
+                {% endif %}
+            </div>
+        </div>
+    </td>
+    <td>{{ item.system_quantity }}</td>
+    <td>
+        <span id="counted-qty-{{ item.pk }}">{{ item.counted_quantity }}</span>
+    </td>
+    <td class="{% if item.system_quantity != item.counted_quantity %}quantity-mismatch{% else %}quantity-match{% endif %}">
+        {% with variance=item.counted_quantity|subtract:item.system_quantity %}
+            {% if variance > 0 %}+{% endif %}{{ variance }}
+        {% endwith %}
+    </td>
+    {% if count.status == 'in_progress' %}
+        <td>
+            <button type="button" class="btn btn-sm btn-outline-primary update-count-btn"
+                    hx-get="{% url 'inventory:get_count_item_form' item.pk %}"
+                    hx-target="#updateCountModalContent"
+                    hx-trigger="click"
+                    data-bs-toggle="modal"
+                    data-bs-target="#updateCountModal">
+                <i class="fas fa-edit"></i> Update
+            </button>
+        </td>
+    {% endif %}
+</tr>

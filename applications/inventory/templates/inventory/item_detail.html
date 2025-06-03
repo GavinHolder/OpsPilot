@@ -1,0 +1,387 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}{{ item.name }} | OpsPilot{% endblock %}
+
+{% block inventory_active %}active{% endblock %}
+
+{% block extra_css %}
+    <style>
+        .stock-status {
+            font-size: 1.2rem;
+            padding: 0.3rem 0.8rem;
+            border-radius: 8px;
+            display: inline-block;
+        }
+        .status-ok {
+            background-color: #28a745;
+            color: white;
+        }
+        .status-low {
+            background-color: #ffc107;
+            color: #212529;
+        }
+        .status-out {
+            background-color: #dc3545;
+            color: white;
+        }
+        .company-badge {
+            font-size: 0.75rem;
+            padding: 0.2rem 0.5rem;
+            border-radius: 10px;
+        }
+        .company-wisp {
+            background-color: #cce5ff;
+            color: #004085;
+        }
+        .company-fno {
+            background-color: #d4edda;
+            color: #155724;
+        }
+        .company-both {
+            background-color: #e2e3e5;
+            color: #383d41;
+        }
+        .movement-item {
+            border-left: 3px solid #dee2e6;
+            padding-left: 15px;
+            margin-bottom: 15px;
+        }
+        .movement-in {
+            border-left-color: #28a745;
+        }
+        .movement-out {
+            border-left-color: #dc3545;
+        }
+        .movement-transfer {
+            border-left-color: #17a2b8;
+        }
+        .movement-adjust {
+            border-left-color: #6c757d;
+        }
+        .thumbnail-container {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+        .thumbnail {
+            width: 100px;
+            height: 100px;
+            object-fit: cover;
+            border-radius: 4px;
+            cursor: pointer;
+            transition: transform 0.2s;
+        }
+        .thumbnail:hover {
+            transform: scale(1.05);
+        }
+    </style>
+{% endblock %}
+
+{% block content %}
+    <div class="container-fluid">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <div>
+                <h1>
+                    <span class="company-badge company-{{ item.company }} me-2">{{ item.get_company_display }}</span>
+                    {{ item.name }}
+                </h1>
+                {% if item.sku %}
+                    <div class="text-muted">SKU: {{ item.sku }}</div>
+                {% endif %}
+            </div>
+            <div class="d-flex">
+                <a href="{% url 'inventory:item_update' item.pk %}" class="btn btn-outline-secondary me-2">
+                    <i class="fas fa-edit"></i> Edit
+                </a>
+                <div class="dropdown">
+                    <button class="btn btn-primary dropdown-toggle" type="button" id="actionDropdown" data-bs-toggle="dropdown" aria-expanded="false">
+                        <i class="fas fa-cog"></i> Actions
+                    </button>
+                    <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="actionDropdown">
+                        <li><a class="dropdown-item" href="{% url 'inventory:movement_create' %}?item={{ item.pk }}&movement_type=stock_in">
+                            <i class="fas fa-arrow-down text-success"></i> Record Stock In
+                        </a></li>
+                        <li><a class="dropdown-item" href="{% url 'inventory:movement_create' %}?item={{ item.pk }}&movement_type=stock_out">
+                            <i class="fas fa-arrow-up text-danger"></i> Record Stock Out
+                        </a></li>
+                        <li><a class="dropdown-item" href="{% url 'inventory:movement_create' %}?item={{ item.pk }}&movement_type=transfer">
+                            <i class="fas fa-exchange-alt text-info"></i> Transfer Stock
+                        </a></li>
+                        <li><hr class="dropdown-divider"></li>
+                        <li><a class="dropdown-item" href="#" data-bs-toggle="modal" data-bs-target="#addAttachmentModal">
+                            <i class="fas fa-paperclip"></i> Add Attachment
+                        </a></li>
+                        <li><hr class="dropdown-divider"></li>
+                        {% if item.supplier %}
+                            <li><a class="dropdown-item" href="{% url 'inventory:purchase_order_create' %}?supplier={{ item.supplier.pk }}&item={{ item.pk }}">
+                                <i class="fas fa-shopping-cart"></i> Order More
+                            </a></li>
+                        {% else %}
+                            <li><a class="dropdown-item" href="{% url 'inventory:purchase_order_create' %}?item={{ item.pk }}">
+                                <i class="fas fa-shopping-cart"></i> Order More
+                            </a></li>
+                        {% endif %}
+                    </ul>
+                </div>
+            </div>
+        </div>
+
+        <div class="row">
+            <!-- Item Details -->
+            <div class="col-lg-4 mb-4">
+                <div class="card h-100">
+                    <div class="card-header bg-light">
+                        <h5 class="mb-0">Item Details</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="text-center mb-4">
+                            <div class="stock-status status-{{ item.stock_status|lower }}">
+                                {{ item.quantity }} in stock
+                            </div>
+                            {% if item.minimum_stock > 0 %}
+                                <div class="mt-2 text-muted">
+                                    Minimum stock level: {{ item.minimum_stock }}
+                                </div>
+                            {% endif %}
+                        </div>
+
+                        <dl class="row mb-0">
+                            <dt class="col-sm-4">Category:</dt>
+                            <dd class="col-sm-8">{{ item.category.name|default:"Not categorized" }}</dd>
+
+                            <dt class="col-sm-4">Location:</dt>
+                            <dd class="col-sm-8">{{ item.location.name|default:"Not specified" }}</dd>
+
+                            <dt class="col-sm-4">Condition:</dt>
+                            <dd class="col-sm-8">{{ item.get_condition_display|default:"Not specified" }}</dd>
+
+                            <dt class="col-sm-4">Unit Price:</dt>
+                            <dd class="col-sm-8">{{ item.unit_price|default:"Not set" }}</dd>
+
+                            <dt class="col-sm-4">Total Value:</dt>
+                            <dd class="col-sm-8">
+                                {% if item.unit_price %}
+                                    R{{ item.total_value|floatformat:2 }}
+                                {% else %}
+                                    Not calculated
+                                {% endif %}
+                            </dd>
+
+                            <dt class="col-sm-4">Supplier:</dt>
+                            <dd class="col-sm-8">
+                                {% if item.supplier %}
+                                    <a href="{% url 'inventory:supplier_detail' item.supplier.pk %}">{{ item.supplier.name }}</a>
+                                {% else %}
+                                    Not specified
+                                {% endif %}
+                            </dd>
+
+                            <dt class="col-sm-4">Reorder Qty:</dt>
+                            <dd class="col-sm-8">{{ item.reorder_quantity|default:"Not set" }}</dd>
+
+                            <dt class="col-sm-4">Status:</dt>
+                            <dd class="col-sm-8">
+                                {% if item.is_active %}
+                                    <span class="badge bg-success">Active</span>
+                                {% else %}
+                                    <span class="badge bg-danger">Inactive</span>
+                                {% endif %}
+                            </dd>
+                        </dl>
+
+                        {% if item.description %}
+                            <hr>
+                            <h6>Description</h6>
+                            <p>{{ item.description|linebreaksbr }}</p>
+                        {% endif %}
+
+                        {% if item.notes %}
+                            <hr>
+                            <h6>Notes</h6>
+                            <p class="mb-0">{{ item.notes|linebreaksbr }}</p>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+
+            <!-- Stock Movement History -->
+            <div class="col-lg-8 mb-4">
+                <div class="card h-100">
+                    <div class="card-header bg-light d-flex justify-content-between align-items-center">
+                        <h5 class="mb-0">Stock Movement History</h5>
+                        <a href="{% url 'inventory:movement_list' %}?item={{ item.pk }}" class="btn btn-sm btn-outline-primary">View All</a>
+                    </div>
+                    <div class="card-body">
+                        {% if movements %}
+                            <div class="list-group">
+                                {% for movement in movements %}
+                                    <div class="movement-item
+                                    {% if movement.movement_type == 'stock_in' %}movement-in
+                                    {% elif movement.movement_type == 'stock_out' %}movement-out
+                                    {% elif movement.movement_type == 'transfer' %}movement-transfer
+                                    {% else %}movement-adjust
+                                    {% endif %}">
+                                        <div class="d-flex justify-content-between align-items-start">
+                                            <div>
+                                                <h6 class="mb-1">{{ movement.get_movement_type_display }}</h6>
+                                                <div class="small text-muted">{{ movement.movement_date|date:"M d, Y H:i" }}</div>
+                                            </div>
+                                            <div class="{% if movement.quantity >= 0 %}text-success{% else %}text-danger{% endif %} fw-bold">
+                                                {% if movement.quantity >= 0 %}+{% endif %}{{ movement.quantity }}
+                                            </div>
+                                        </div>
+                                        {% if movement.reference_number or movement.notes %}
+                                            <div class="mt-2">
+                                                {% if movement.reference_number %}
+                                                    <div><strong>Reference:</strong> {{ movement.reference_number }}</div>
+                                                {% endif %}
+                                                {% if movement.notes %}
+                                                    <div><small>{{ movement.notes|linebreaksbr }}</small></div>
+                                                {% endif %}
+                                            </div>
+                                        {% endif %}
+                                    </div>
+                                {% endfor %}
+                            </div>
+                        {% else %}
+                            <div class="text-center py-4">
+                                <i class="fas fa-exchange-alt fa-3x text-muted mb-3"></i>
+                                <p>No stock movements recorded for this item.</p>
+                                <div class="mt-3">
+                                    <a href="{% url 'inventory:movement_create' %}?item={{ item.pk }}&movement_type=stock_in" class="btn btn-success me-2">
+                                        <i class="fas fa-arrow-down"></i> Record Stock In
+                                    </a>
+                                    <a href="{% url 'inventory:movement_create' %}?item={{ item.pk }}&movement_type=stock_out" class="btn btn-danger">
+                                        <i class="fas fa-arrow-up"></i> Record Stock Out
+                                    </a>
+                                </div>
+                            </div>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+
+            <!-- Attachments -->
+            <div class="col-md-6 mb-4">
+                <div class="card">
+                    <div class="card-header bg-light d-flex justify-content-between align-items-center">
+                        <h5 class="mb-0">Attachments</h5>
+                        <button class="btn btn-sm btn-outline-primary" data-bs-toggle="modal" data-bs-target="#addAttachmentModal">
+                            <i class="fas fa-plus"></i> Add
+                        </button>
+                    </div>
+                    <div class="card-body">
+                        {% if attachments %}
+                            <div class="thumbnail-container">
+                                {% for attachment in attachments %}
+                                    {% if attachment.file_type == 'image' %}
+                                        <a href="{{ attachment.file.url }}" target="_blank" title="{{ attachment.description|default:attachment.file.name }}">
+                                            <img src="{{ attachment.file.url }}" alt="{{ attachment.description|default:'Attachment' }}" class="thumbnail">
+                                        </a>
+                                    {% else %}
+                                        <a href="{{ attachment.file.url }}" target="_blank" class="btn btn-outline-secondary mb-2" title="{{ attachment.description|default:attachment.file.name }}">
+                                            <i class="fas fa-file"></i> {{ attachment.file.name|truncatechars:20 }}
+                                        </a>
+                                    {% endif %}
+                                {% endfor %}
+                            </div>
+                        {% else %}
+                            <div class="text-center py-3">
+                                <i class="fas fa-paperclip fa-2x text-muted mb-2"></i>
+                                <p>No attachments added to this item.</p>
+                                <button class="btn btn-outline-primary btn-sm" data-bs-toggle="modal" data-bs-target="#addAttachmentModal">
+                                    <i class="fas fa-plus"></i> Add Attachment
+                                </button>
+                            </div>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+
+            <!-- Purchase Order History -->
+            <div class="col-md-6 mb-4">
+                <div class="card">
+                    <div class="card-header bg-light">
+                        <h5 class="mb-0">Purchase History</h5>
+                    </div>
+                    <div class="card-body">
+                        {% if purchase_history %}
+                            <div class="table-responsive">
+                                <table class="table table-sm">
+                                    <thead>
+                                    <tr>
+                                        <th>Order #</th>
+                                        <th>Date</th>
+                                        <th>Supplier</th>
+                                        <th>Quantity</th>
+                                        <th>Price</th>
+                                    </tr>
+                                    </thead>
+                                    <tbody>
+                                    {% for order_item in purchase_history %}
+                                        <tr>
+                                            <td>
+                                                <a href="{% url 'inventory:purchase_order_detail' order_item.purchase_order.pk %}">
+                                                    {{ order_item.purchase_order.order_number }}
+                                                </a>
+                                            </td>
+                                            <td>{{ order_item.purchase_order.order_date|date:"M d, Y" }}</td>
+                                            <td>{{ order_item.purchase_order.supplier.name }}</td>
+                                            <td>{{ order_item.quantity }}</td>
+                                            <td>R{{ order_item.price|floatformat:2 }}</td>
+                                        </tr>
+                                    {% endfor %}
+                                    </tbody>
+                                </table>
+                            </div>
+                        {% else %}
+                            <div class="text-center py-3">
+                                <i class="fas fa-shopping-cart fa-2x text-muted mb-2"></i>
+                                <p>No purchase history for this item.</p>
+                                {% if item.supplier %}
+                                    <a href="{% url 'inventory:purchase_order_create' %}?supplier={{ item.supplier.pk }}&item={{ item.pk }}" class="btn btn-outline-primary btn-sm">
+                                        <i class="fas fa-file-invoice"></i> Create Purchase Order
+                                    </a>
+                                {% else %}
+                                    <a href="{% url 'inventory:purchase_order_create' %}?item={{ item.pk }}" class="btn btn-outline-primary btn-sm">
+                                        <i class="fas fa-file-invoice"></i> Create Purchase Order
+                                    </a>
+                                {% endif %}
+                            </div>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Add Attachment Modal -->
+    <div class="modal fade" id="addAttachmentModal" tabindex="-1" aria-labelledby="addAttachmentModalLabel" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="addAttachmentModalLabel">Add Attachment</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <form method="post" action="{% url 'inventory:add_item_attachment' item.pk %}" enctype="multipart/form-data">
+                    <div class="modal-body">
+                        {% csrf_token %}
+                        <div class="mb-3">
+                            <label for="attachment_file" class="form-label">File</label>
+                            <input type="file" class="form-control" id="attachment_file" name="file" required>
+                        </div>
+                        <div class="mb-3">
+                            <label for="attachment_description" class="form-label">Description (optional)</label>
+                            <input type="text" class="form-control" id="attachment_description" name="description" placeholder="Brief description of the attachment">
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                        <button type="submit" class="btn btn-primary">Upload</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+{% endblock %}

@@ -1,0 +1,72 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}{% if form.instance.pk %}Edit{% else %}Add{% endif %} Category | OpsPilot{% endblock %}
+
+{% block inventory_active %}active{% endblock %}
+
+{% block content %}
+    <div class="container-fluid">
+        <div class="row">
+            <div class="col-lg-8 mx-auto">
+                <div class="card">
+                    <div class="card-header bg-light">
+                        <h5 class="mb-0">{% if form.instance.pk %}Edit{% else %}Add New{% endif %} Category</h5>
+                    </div>
+                    <div class="card-body">
+                        <form method="post">
+                            {% csrf_token %}
+
+                            <div class="mb-3">
+                                <label for="{{ form.name.id_for_label }}" class="form-label">Name*</label>
+                                {{ form.name }}
+                                {% if form.name.errors %}
+                                    <div class="invalid-feedback d-block">
+                                        {% for error in form.name.errors %}{{ error }}{% endfor %}
+                                    </div>
+                                {% endif %}
+                            </div>
+
+                            <div class="mb-3">
+                                <label for="{{ form.description.id_for_label }}" class="form-label">Description</label>
+                                {{ form.description }}
+                                {% if form.description.errors %}
+                                    <div class="invalid-feedback d-block">
+                                        {% for error in form.description.errors %}{{ error }}{% endfor %}
+                                    </div>
+                                {% endif %}
+                                <div class="form-text">Optional: Provide a brief description of this category</div>
+                            </div>
+
+                            <div class="d-flex justify-content-between mt-4">
+                                <a href="{% url 'inventory:category_list' %}" class="btn btn-outline-secondary">
+                                    <i class="fas fa-arrow-left"></i> Back to List
+                                </a>
+                                <button type="submit" class="btn btn-primary">
+                                    <i class="fas fa-save"></i> {% if form.instance.pk %}Update{% else %}Save{% endif %} Category
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+{% endblock %}
+
+{% block extra_js %}
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // Add Bootstrap classes to form fields
+            const nameInput = document.getElementById('{{ form.name.id_for_label }}');
+            if (nameInput && !nameInput.classList.contains('form-control')) {
+                nameInput.classList.add('form-control');
+            }
+
+            const descriptionInput = document.getElementById('{{ form.description.id_for_label }}');
+            if (descriptionInput && !descriptionInput.classList.contains('form-control')) {
+                descriptionInput.classList.add('form-control');
+            }
+        });
+    </script>
+{% endblock %}

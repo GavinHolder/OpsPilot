@@ -1,0 +1,315 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}{% if form.instance.pk %}Edit{% else %}New{% endif %} Purchase Order | OpsPilot{% endblock %}
+
+{% block inventory_active %}active{% endblock %}
+
+{% block extra_css %}
+    <style>
+        .company-badge {
+            font-size: 0.75rem;
+            padding: 0.2rem 0.5rem;
+            border-radius: 10px;
+        }
+        .company-wisp {
+            background-color: #cce5ff;
+            color: #004085;
+        }
+        .company-fno {
+            background-color: #d4edda;
+            color: #155724;
+        }
+        .company-both {
+            background-color: #e2e3e5;
+            color: #383d41;
+        }
+        .item-row:hover {
+            background-color: #f8f9fa;
+        }
+        .item-row td {
+            vertical-align: middle;
+        }
+    </style>
+{% endblock %}
+
+{% block content %}
+    <div class="container-fluid">
+        <div class="row">
+            <div class="col-lg-10 mx-auto">
+                <div class="card">
+                    <div class="card-header bg-light">
+                        <h5 class="mb-0">{% if form.instance.pk %}Edit{% else %}New{% endif %} Purchase Order</h5>
+                    </div>
+                    <div class="card-body">
+                        <form method="post" id="purchaseOrderForm">
+                            {% csrf_token %}
+
+                            <div class="row">
+                                <div class="col-md-8">
+                                    <div class="mb-3">
+                                        <label for="{{ form.supplier.id_for_label }}" class="form-label">Supplier*</label>
+                                        {{ form.supplier }}
+                                        {% if form.supplier.errors %}
+                                            <div class="invalid-feedback d-block">
+                                                {% for error in form.supplier.errors %}{{ error }}{% endfor %}
+                                            </div>
+                                        {% endif %}
+                                    </div>
+                                </div>
+                                <div class="col-md-4">
+                                    <div class="mb-3">
+                                        <label for="{{ form.company.id_for_label }}" class="form-label">Company*</label>
+                                        {{ form.company }}
+                                        {% if form.company.errors %}
+                                            <div class="invalid-feedback d-block">
+                                                {% for error in form.company.errors %}{{ error }}{% endfor %}
+                                            </div>
+                                        {% endif %}
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="row">
+                                <div class="col-md-4">
+                                    <div class="mb-3">
+                                        <label for="{{ form.order_number.id_for_label }}" class="form-label">Order Number*</label>
+                                        {{ form.order_number }}
+                                        {% if form.order_number.errors %}
+                                            <div class="invalid-feedback d-block">
+                                                {% for error in form.order_number.errors %}{{ error }}{% endfor %}
+                                            </div>
+                                        {% endif %}
+                                    </div>
+                                </div>
+                                <div class="col-md-4">
+                                    <div class="mb-3">
+                                        <label for="{{ form.order_date.id_for_label }}" class="form-label">Order Date*</label>
+                                        {{ form.order_date }}
+                                        {% if form.order_date.errors %}
+                                            <div class="invalid-feedback d-block">
+                                                {% for error in form.order_date.errors %}{{ error }}{% endfor %}
+                                            </div>
+                                        {% endif %}
+                                    </div>
+                                </div>
+                                <div class="col-md-4">
+                                    <div class="mb-3">
+                                        <label for="{{ form.expected_delivery_date.id_for_label }}" class="form-label">Expected Delivery</label>
+                                        {{ form.expected_delivery_date }}
+                                        {% if form.expected_delivery_date.errors %}
+                                            <div class="invalid-feedback d-block">
+                                                {% for error in form.expected_delivery_date.errors %}{{ error }}{% endfor %}
+                                            </div>
+                                        {% endif %}
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <div class="mb-3">
+                                        <label for="{{ form.reference_number.id_for_label }}" class="form-label">Reference Number</label>
+                                        {{ form.reference_number }}
+                                        {% if form.reference_number.errors %}
+                                            <div class="invalid-feedback d-block">
+                                                {% for error in form.reference_number.errors %}{{ error }}{% endfor %}
+                                            </div>
+                                        {% endif %}
+                                        <div class="form-text">External reference, invoice number, etc.</div>
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="mb-3">
+                                        <label for="{{ form.shipping_method.id_for_label }}" class="form-label">Shipping Method</label>
+                                        {{ form.shipping_method }}
+                                        {% if form.shipping_method.errors %}
+                                            <div class="invalid-feedback d-block">
+                                                {% for error in form.shipping_method.errors %}{{ error }}{% endfor %}
+                                            </div>
+                                        {% endif %}
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="mb-3">
+                                <label for="{{ form.notes.id_for_label }}" class="form-label">Notes</label>
+                                {{ form.notes }}
+                                {% if form.notes.errors %}
+                                    <div class="invalid-feedback d-block">
+                                        {% for error in form.notes.errors %}{{ error }}{% endfor %}
+                                    </div>
+                                {% endif %}
+                            </div>
+
+                            <!-- Order Items Section -->
+                            <h5 class="mt-4 mb-3">Order Items</h5>
+
+                            {% if form.instance.pk %}
+                                <div class="table-responsive">
+                                    <table class="table table-bordered" id="orderItemsTable">
+                                        <thead class="table-light">
+                                        <tr>
+                                            <th>Item</th>
+                                            <th>Quantity</th>
+                                            <th>Price</th>
+                                            <th>Total</th>
+                                            <th>Actions</th>
+                                        </tr>
+                                        </thead>
+                                        <tbody>
+                                        {% for item in order_items %}
+                                            <tr class="item-row">
+                                                <td>
+                                                    <div class="d-flex align-items-center">
+                                                        <span class="company-badge company-{{ item.item.company }} me-2">{{ item.item.get_company_display }}</span>
+                                                        {{ item.item.name }}
+                                                        {% if item.item.sku %}
+                                                            <small class="text-muted ms-2">({{ item.item.sku }})</small>
+                                                        {% endif %}
+                                                    </div>
+                                                </td>
+                                                <td>{{ item.quantity }}</td>
+                                                <td>R{{ item.price|floatformat:2 }}</td>
+                                                <td>R{{ item.total_price|floatformat:2 }}</td>
+                                                <td>
+                                                    <form method="post" action="{% url 'inventory:remove_purchase_order_item' order.pk item.pk %}" class="d-inline">
+                                                        {% csrf_token %}
+                                                        <button type="submit" class="btn btn-sm btn-outline-danger">
+                                                            <i class="fas fa-trash"></i>
+                                                        </button>
+                                                    </form>
+                                                </td>
+                                            </tr>
+                                        {% empty %}
+                                            <tr>
+                                                <td colspan="5" class="text-center py-3">
+                                                    No items added to this order yet.
+                                                </td>
+                                            </tr>
+                                        {% endfor %}
+                                        </tbody>
+                                        <tfoot>
+                                        <tr>
+                                            <td colspan="3" class="text-end"><strong>Total:</strong></td>
+                                            <td><strong>R{{ order.total_price|floatformat:2 }}</strong></td>
+                                            <td></td>
+                                        </tr>
+                                        </tfoot>
+                                    </table>
+                                </div>
+
+                                <button type="button" class="btn btn-outline-primary" data-bs-toggle="modal" data-bs-target="#addItemModal">
+                                    <i class="fas fa-plus"></i> Add Item
+                                </button>
+                            {% else %}
+                                <div class="alert alert-info">
+                                    <i class="fas fa-info-circle me-2"></i> Save the purchase order first, then you can add items.
+                                </div>
+                            {% endif %}
+
+                            <div class="d-flex justify-content-between mt-4">
+                                <a href="{% url 'inventory:purchase_order_list' %}" class="btn btn-outline-secondary">
+                                    <i class="fas fa-arrow-left"></i> Back to List
+                                </a>
+                                <div>
+                                    <button type="submit" class="btn btn-primary">
+                                        <i class="fas fa-save"></i> {% if form.instance.pk %}Update{% else %}Save{% endif %} Order
+                                    </button>
+                                    {% if form.instance.pk and form.instance.status == 'draft' %}
+                                        <a href="{% url 'inventory:approve_purchase_order' form.instance.pk %}" class="btn btn-success ms-2">
+                                            <i class="fas fa-check"></i> Submit for Approval
+                                        </a>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    {% if form.instance.pk %}
+        <!-- Add Item Modal -->
+        <div class="modal fade" id="addItemModal" tabindex="-1" aria-labelledby="addItemModalLabel" aria-hidden="true">
+            <div class="modal-dialog">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title" id="addItemModalLabel">Add Item to Order</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+                    <form method="post" action="{% url 'inventory:add_purchase_order_item' order.pk %}">
+                        <div class="modal-body">
+                            {% csrf_token %}
+                            <div class="mb-3">
+                                <label for="item" class="form-label">Item*</label>
+                                <select name="item" id="item" class="form-select" required>
+                                    <option value="">Select an item...</option>
+                                    {% for item in available_items %}
+                                        <option value="{{ item.pk }}" data-price="{{ item.unit_price|default:0 }}">
+                                            {{ item.name }} {% if item.sku %}({{ item.sku }}){% endif %}
+                                        </option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+                            <div class="mb-3">
+                                <label for="quantity" class="form-label">Quantity*</label>
+                                <input type="number" class="form-control" id="quantity" name="quantity" min="1" value="1" required>
+                            </div>
+                            <div class="mb-3">
+                                <label for="price" class="form-label">Price per Unit (R)*</label>
+                                <input type="number" class="form-control" id="price" name="price" min="0" step="0.01" required>
+                            </div>
+                            <div class="mb-3">
+                                <label for="notes" class="form-label">Notes</label>
+                                <textarea class="form-control" id="notes" name="notes" rows="2"></textarea>
+                            </div>
+                        </div>
+                        <div class="modal-footer">
+                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                            <button type="submit" class="btn btn-primary">Add to Order</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    {% endif %}
+{% endblock %}
+
+{% block extra_js %}
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // Add Bootstrap classes to form fields
+            const formFields = document.querySelectorAll('form input[type="text"], form input[type="number"], form input[type="date"], form textarea');
+            formFields.forEach(field => {
+                if (!field.classList.contains('form-control')) {
+                    field.classList.add('form-control');
+                }
+            });
+
+            const selectInputs = document.querySelectorAll('form select');
+            selectInputs.forEach(select => {
+                if (!select.classList.contains('form-select')) {
+                    select.classList.add('form-select');
+                }
+            });
+
+            {% if form.instance.pk %}
+                // Item price population in modal
+                const itemSelect = document.getElementById('item');
+                const priceInput = document.getElementById('price');
+
+                itemSelect.addEventListener('change', function() {
+                    const selectedOption = this.options[this.selectedIndex];
+                    if (selectedOption.value) {
+                        const defaultPrice = selectedOption.getAttribute('data-price');
+                        priceInput.value = defaultPrice;
+                    } else {
+                        priceInput.value = '';
+                    }
+                });
+            {% endif %}
+        });
+    </script>
+{% endblock %}

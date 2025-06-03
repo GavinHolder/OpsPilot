@@ -1,0 +1,243 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}{{ supplier.name }} | OpsPilot{% endblock %}
+
+{% block inventory_active %}active{% endblock %}
+
+{% block content %}
+    <div class="container-fluid">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <h1>{{ supplier.name }}</h1>
+            <div>
+                <a href="{% url 'inventory:supplier_update' supplier.pk %}" class="btn btn-outline-secondary">
+                    <i class="fas fa-edit"></i> Edit
+                </a>
+                <a href="{% url 'inventory:purchase_order_create' %}?supplier={{ supplier.pk }}" class="btn btn-primary">
+                    <i class="fas fa-file-invoice"></i> New Purchase Order
+                </a>
+            </div>
+        </div>
+
+        <div class="row">
+            <!-- Supplier Info -->
+            <div class="col-lg-4 mb-4">
+                <div class="card h-100">
+                    <div class="card-header bg-light">
+                        <h5 class="mb-0">Supplier Information</h5>
+                    </div>
+                    <div class="card-body">
+                        <dl class="row mb-0">
+                            {% if supplier.website %}
+                                <dt class="col-sm-4">Website:</dt>
+                                <dd class="col-sm-8"><a href="{{ supplier.website }}" target="_blank">{{ supplier.website }}</a></dd>
+                            {% endif %}
+
+                            {% if supplier.contact_name %}
+                                <dt class="col-sm-4">Contact:</dt>
+                                <dd class="col-sm-8">{{ supplier.contact_name }}</dd>
+                            {% endif %}
+
+                            {% if supplier.contact_email %}
+                                <dt class="col-sm-4">Email:</dt>
+                                <dd class="col-sm-8"><a href="mailto:{{ supplier.contact_email }}">{{ supplier.contact_email }}</a></dd>
+                            {% endif %}
+
+                            {% if supplier.contact_phone %}
+                                <dt class="col-sm-4">Phone:</dt>
+                                <dd class="col-sm-8">{{ supplier.contact_phone }}</dd>
+                            {% endif %}
+
+                            {% if supplier.address %}
+                                <dt class="col-sm-4">Address:</dt>
+                                <dd class="col-sm-8">{{ supplier.address|linebreaksbr }}</dd>
+                            {% endif %}
+
+                            {% if supplier.payment_terms %}
+                                <dt class="col-sm-4">Terms:</dt>
+                                <dd class="col-sm-8">{{ supplier.payment_terms }}</dd>
+                            {% endif %}
+                        </dl>
+
+                        {% if supplier.notes %}
+                            <hr>
+                            <h6>Notes</h6>
+                            <p class="mb-0">{{ supplier.notes|linebreaksbr }}</p>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+
+            <!-- Recent Orders -->
+            <div class="col-lg-8 mb-4">
+                <div class="card h-100">
+                    <div class="card-header bg-light d-flex justify-content-between align-items-center">
+                        <h5 class="mb-0">Purchase Orders</h5>
+                        <a href="{% url 'inventory:purchase_order_list' %}?supplier={{ supplier.pk }}" class="btn btn-sm btn-outline-primary">View All</a>
+                    </div>
+                    <div class="card-body">
+                        {% if purchase_orders %}
+                            <div class="table-responsive">
+                                <table class="table table-hover">
+                                    <thead>
+                                    <tr>
+                                        <th>Order #</th>
+                                        <th>Date</th>
+                                        <th>Status</th>
+                                        <th>Items</th>
+                                        <th>Total</th>
+                                        <th></th>
+                                    </tr>
+                                    </thead>
+                                    <tbody>
+                                    {% for order in purchase_orders %}
+                                        <tr>
+                                            <td>{{ order.order_number }}</td>
+                                            <td>{{ order.order_date|date:"M d, Y" }}</td>
+                                            <td>
+                                                <span class="badge
+                                                    {% if order.status == 'draft' %}bg-secondary
+                                                    {% elif order.status == 'pending_approval' %}bg-warning
+                                                    {% elif order.status == 'approved' %}bg-info
+                                                    {% elif order.status == 'ordered' %}bg-primary
+                                                    {% elif order.status == 'received' %}bg-success
+                                                    {% elif order.status == 'cancelled' %}bg-danger
+                                                    {% endif %}">
+                                                    {{ order.get_status_display }}
+                                                </span>
+                                            </td>
+                                            <td>{{ order.purchaseorderitem_set.count }}</td>
+                                            <td>R{{ order.total_price|floatformat:2 }}</td>
+                                            <td>
+                                                <a href="{% url 'inventory:purchase_order_detail' order.pk %}" class="btn btn-sm btn-outline-primary">
+                                                    <i class="fas fa-eye"></i>
+                                                </a>
+                                            </td>
+                                        </tr>
+                                    {% endfor %}
+                                    </tbody>
+                                </table>
+                            </div>
+                        {% else %}
+                            <div class="text-center py-4">
+                                <i class="fas fa-file-invoice fa-3x text-muted mb-3"></i>
+                                <p>No purchase orders found for this supplier.</p>
+                                <a href="{% url 'inventory:purchase_order_create' %}?supplier={{ supplier.pk }}" class="btn btn-primary">
+                                    Create First Order
+                                </a>
+                            </div>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+
+            <!-- Supplied Items -->
+            <div class="col-12">
+                <div class="card">
+                    <div class="card-header bg-light">
+                        <h5 class="mb-0">Items Supplied</h5>
+                    </div>
+                    <div class="card-body">
+                        {% if supplied_items %}
+                            <div class="table-responsive">
+                                <table class="table table-hover">
+                                    <thead>
+                                    <tr>
+                                        <th>Item</th>
+                                        <th>Category</th>
+                                        <th>Current Stock</th>
+                                        <th>Last Ordered</th>
+                                        <th>Price</th>
+                                        <th></th>
+                                    </tr>
+                                    </thead>
+                                    <tbody>
+                                    {% for item in supplied_items %}
+                                        <tr>
+                                            <td>
+                                                <div class="d-flex align-items-center">
+                                                    <span class="company-badge company-{{ item.company }} me-2">{{ item.get_company_display }}</span>
+                                                    <div>
+                                                        <a href="{% url 'inventory:item_detail' item.pk %}">{{ item.name }}</a>
+                                                        {% if item.sku %}
+                                                            <div class="small text-muted">SKU: {{ item.sku }}</div>
+                                                        {% endif %}
+                                                    </div>
+                                                </div>
+                                            </td>
+                                            <td>{{ item.category.name|default:"—" }}</td>
+                                            <td>
+                                                <span class="status-badge status-{{ item.stock_status|lower }} me-2">
+                                                    {{ item.quantity }}
+                                                </span>
+                                            </td>
+                                            <td>
+                                                {% with last_order=item.get_last_purchase %}
+                                                    {% if last_order %}
+                                                        {{ last_order.order_date|date:"M d, Y" }}
+                                                    {% else %}
+                                                        —
+                                                    {% endif %}
+                                                {% endwith %}
+                                            </td>
+                                            <td>R{{ item.unit_price|floatformat:2 }}</td>
+                                            <td>
+                                                <a href="{% url 'inventory:purchase_order_create' %}?supplier={{ supplier.pk }}&item={{ item.pk }}" class="btn btn-sm btn-outline-primary">
+                                                    <i class="fas fa-shopping-cart"></i> Order
+                                                </a>
+                                            </td>
+                                        </tr>
+                                    {% endfor %}
+                                    </tbody>
+                                </table>
+                            </div>
+                        {% else %}
+                            <div class="text-center py-4">
+                                <p>No items have been ordered from this supplier yet.</p>
+                            </div>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+{% endblock %}
+
+{% block extra_css %}
+    <style>
+        .company-badge {
+            font-size: 0.75rem;
+            padding: 0.2rem 0.5rem;
+            border-radius: 10px;
+        }
+        .company-wisp {
+            background-color: #cce5ff;
+            color: #004085;
+        }
+        .company-fno {
+            background-color: #d4edda;
+            color: #155724;
+        }
+        .company-both {
+            background-color: #e2e3e5;
+            color: #383d41;
+        }
+        .status-badge {
+            font-size: 0.75rem;
+            padding: 0.2rem 0.5rem;
+            border-radius: 10px;
+        }
+        .status-ok {
+            background-color: #28a745;
+            color: white;
+        }
+        .status-low {
+            background-color: #ffc107;
+            color: #212529;
+        }
+        .status-out {
+            background-color: #dc3545;
+            color: white;
+        }
+    </style>
+{% endblock %}

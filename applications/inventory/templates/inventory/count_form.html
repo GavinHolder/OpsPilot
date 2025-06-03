@@ -1,0 +1,155 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Start Inventory Count | OpsPilot{% endblock %}
+
+{% block inventory_active %}active{% endblock %}
+
+{% block content %}
+    <div class="container-fluid">
+        <div class="row">
+            <div class="col-lg-8 mx-auto">
+                <div class="card">
+                    <div class="card-header bg-light">
+                        <h5 class="mb-0">Start New Inventory Count</h5>
+                    </div>
+                    <div class="card-body">
+                        <form method="post">
+                            {% csrf_token %}
+
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <div class="mb-3">
+                                        <label for="{{ form.count_number.id_for_label }}" class="form-label">Count Number*</label>
+                                        {{ form.count_number }}
+                                        {% if form.count_number.errors %}
+                                            <div class="invalid-feedback d-block">
+                                                {% for error in form.count_number.errors %}{{ error }}{% endfor %}
+                                            </div>
+                                        {% endif %}
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="mb-3">
+                                        <label for="{{ form.count_date.id_for_label }}" class="form-label">Count Date*</label>
+                                        {{ form.count_date }}
+                                        {% if form.count_date.errors %}
+                                            <div class="invalid-feedback d-block">
+                                                {% for error in form.count_date.errors %}{{ error }}{% endfor %}
+                                            </div>
+                                        {% endif %}
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <div class="mb-3">
+                                        <label for="{{ form.company.id_for_label }}" class="form-label">Company*</label>
+                                        {{ form.company }}
+                                        {% if form.company.errors %}
+                                            <div class="invalid-feedback d-block">
+                                                {% for error in form.company.errors %}{{ error }}{% endfor %}
+                                            </div>
+                                        {% endif %}
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="mb-3">
+                                        <label for="{{ form.location.id_for_label }}" class="form-label">Location</label>
+                                        {{ form.location }}
+                                        {% if form.location.errors %}
+                                            <div class="invalid-feedback d-block">
+                                                {% for error in form.location.errors %}{{ error }}{% endfor %}
+                                            </div>
+                                        {% endif %}
+                                        <div class="form-text">Leave blank to count items across all locations</div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <div class="mb-3">
+                                        <label for="{{ form.category.id_for_label }}" class="form-label">Category</label>
+                                        {{ form.category }}
+                                        {% if form.category.errors %}
+                                            <div class="invalid-feedback d-block">
+                                                {% for error in form.category.errors %}{{ error }}{% endfor %}
+                                            </div>
+                                        {% endif %}
+                                        <div class="form-text">Optional: Filter by category</div>
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="mb-3">
+                                        <label for="{{ form.counted_by.id_for_label }}" class="form-label">Counted By*</label>
+                                        {{ form.counted_by }}
+                                        {% if form.counted_by.errors %}
+                                            <div class="invalid-feedback d-block">
+                                                {% for error in form.counted_by.errors %}{{ error }}{% endfor %}
+                                            </div>
+                                        {% endif %}
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="mb-3">
+                                <label for="{{ form.notes.id_for_label }}" class="form-label">Notes</label>
+                                {{ form.notes }}
+                                {% if form.notes.errors %}
+                                    <div class="invalid-feedback d-block">
+                                        {% for error in form.notes.errors %}{{ error }}{% endfor %}
+                                    </div>
+                                {% endif %}
+                            </div>
+
+                            <div class="d-flex justify-content-between mt-4">
+                                <a href="{% url 'inventory:count_list' %}" class="btn btn-outline-secondary">
+                                    <i class="fas fa-arrow-left"></i> Back to List
+                                </a>
+                                <button type="submit" class="btn btn-primary">
+                                    <i class="fas fa-play"></i> Start Count
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+{% endblock %}
+
+{% block extra_js %}
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // Add Bootstrap classes to form fields
+            const formFields = document.querySelectorAll('form input[type="text"], form input[type="date"], form textarea');
+            formFields.forEach(field => {
+                if (!field.classList.contains('form-control')) {
+                    field.classList.add('form-control');
+                }
+            });
+
+            const selectInputs = document.querySelectorAll('form select');
+            selectInputs.forEach(select => {
+                if (!select.classList.contains('form-select')) {
+                    select.classList.add('form-select');
+                }
+            });
+
+            // Auto-generate count number based on date if empty
+            const countNumberInput = document.getElementById('{{ form.count_number.id_for_label }}');
+            const countDateInput = document.getElementById('{{ form.count_date.id_for_label }}');
+
+            if (countNumberInput && countDateInput && !countNumberInput.value) {
+                const today = new Date();
+                const year = today.getFullYear();
+                const month = String(today.getMonth() + 1).padStart(2, '0');
+                const day = String(today.getDate()).padStart(2, '0');
+
+                countNumberInput.value = `CNT-${year}${month}${day}-01`;
+            }
+        });
+    </script>
+{% endblock %}

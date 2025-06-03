@@ -1,0 +1,33 @@
+{% load static %}
+
+<div class="card mb-3">
+    <div class="card-header bg-light d-flex justify-content-between align-items-center">
+        <h6 class="mb-0">
+            <span class="company-badge company-{{ item.item.company }} me-2">{{ item.item.get_company_display }}</span>
+            {{ item.item.name }}
+        </h6>
+        <button type="button" class="btn-close btn-sm" aria-label="Close"
+                hx-post="{% url 'inventory:remove_purchase_order_item' order.pk item.pk %}"
+                hx-target="#order-items-container"
+                hx-swap="outerHTML"></button>
+    </div>
+    <div class="card-body">
+        <div class="row">
+            <div class="col-md-3">
+                <p class="mb-1"><strong>SKU:</strong> {{ item.item.sku|default:"—" }}</p>
+            </div>
+            <div class="col-md-3">
+                <p class="mb-1"><strong>Quantity:</strong> {{ item.quantity }}</p>
+            </div>
+            <div class="col-md-3">
+                <p class="mb-1"><strong>Price:</strong> R{{ item.price|floatformat:2 }}</p>
+            </div>
+            <div class="col-md-3">
+                <p class="mb-1"><strong>Total:</strong> R{{ item.total_price|floatformat:2 }}</p>
+            </div>
+        </div>
+        {% if item.notes %}
+            <p class="mb-0 mt-2 small text-muted">Notes: {{ item.notes }}</p>
+        {% endif %}
+    </div>
+</div>

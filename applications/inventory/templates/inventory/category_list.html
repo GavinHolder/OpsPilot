@@ -1,0 +1,68 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Categories | OpsPilot{% endblock %}
+
+{% block inventory_active %}active{% endblock %}
+
+{% block content %}
+    <div class="container-fluid">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <h1>Categories</h1>
+            <div>
+                <a href="{% url 'inventory:category_create' %}" class="btn btn-primary">
+                    <i class="fas fa-plus-circle"></i> Add Category
+                </a>
+            </div>
+        </div>
+
+        <div class="row">
+            <div class="col-12">
+                <div class="card">
+                    <div class="card-body">
+                        {% if categories %}
+                            <div class="table-responsive">
+                                <table class="table table-hover">
+                                    <thead>
+                                    <tr>
+                                        <th>Name</th>
+                                        <th>Description</th>
+                                        <th>Items Count</th>
+                                        <th>Actions</th>
+                                    </tr>
+                                    </thead>
+                                    <tbody>
+                                    {% for category in categories %}
+                                        <tr>
+                                            <td>{{ category.name }}</td>
+                                            <td>{{ category.description|default:"-" }}</td>
+                                            <td>{{ category.item_set.count }}</td>
+                                            <td>
+                                                <div class="btn-group">
+                                                    <a href="{% url 'inventory:category_update' category.pk %}" class="btn btn-sm btn-outline-secondary">
+                                                        <i class="fas fa-edit"></i>
+                                                    </a>
+                                                    <a href="{% url 'inventory:item_list' %}?category={{ category.pk }}" class="btn btn-sm btn-outline-primary">
+                                                        <i class="fas fa-list"></i> View Items
+                                                    </a>
+                                                </div>
+                                            </td>
+                                        </tr>
+                                    {% endfor %}
+                                    </tbody>
+                                </table>
+                            </div>
+                        {% else %}
+                            <div class="text-center my-5">
+                                <i class="fas fa-folder-open fa-3x text-muted mb-3"></i>
+                                <h3>No categories found</h3>
+                                <p class="text-muted">Create your first category to organize your inventory items</p>
+                                <a href="{% url 'inventory:category_create' %}" class="btn btn-primary mt-2">Add Category</a>
+                            </div>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+{% endblock %}
