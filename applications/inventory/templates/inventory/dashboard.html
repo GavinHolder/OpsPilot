@@ -1,0 +1,378 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Inventory Dashboard | OpsPilot{% endblock %}
+
+{% block inventory_active %}active{% endblock %}
+
+{% block extra_css %}
+<style>
+    .stats-card {
+        border-radius: 10px;
+        overflow: hidden;
+        box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+        transition: transform 0.3s;
+    }
+    .stats-card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+    }
+    .stats-header {
+        padding: 15px;
+        color: white;
+    }
+    .stats-body {
+        padding: 15px;
+        background-color: #fff;
+    }
+    .stats-value {
+        font-size: 2rem;
+        font-weight: 600;
+    }
+    .stats-label {
+        color: #6c757d;
+    }
+    .wisp-bg {
+        background-color: #007bff;
+    }
+    .fno-bg {
+        background-color: #28a745;
+    }
+    .warning-bg {
+        background-color: #ffc107;
+    }
+    .danger-bg {
+        background-color: #dc3545;
+    }
+    .info-bg {
+        background-color: #17a2b8;
+    }
+    .activity-card {
+        margin-bottom: 15px;
+    }
+    .activity-header {
+        background-color: #f8f9fa;
+        padding: 10px 15px;
+        border-top-left-radius: 8px;
+        border-top-right-radius: 8px;
+        border: 1px solid #dee2e6;
+    }
+    .activity-body {
+        padding: 15px;
+        border: 1px solid #dee2e6;
+        border-top: none;
+        border-bottom-left-radius: 8px;
+        border-bottom-right-radius: 8px;
+    }
+    .quick-action-btn {
+        border-radius: 8px;
+        padding: 15px;
+        margin-bottom: 15px;
+        text-align: center;
+        transition: all 0.3s;
+    }
+    .quick-action-btn:hover {
+        transform: translateY(-3px);
+    }
+    .quick-action-btn i {
+        font-size: 2rem;
+        margin-bottom: 10px;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h1>Inventory Dashboard</h1>
+        <div class="d-flex">
+            <div class="dropdown">
+                <button class="btn btn-primary dropdown-toggle" type="button" id="reportsDropdown" data-bs-toggle="dropdown" aria-expanded="false">
+                    <i class="fas fa-chart-bar"></i> Reports
+                </button>
+                <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="reportsDropdown">
+                    <li><a class="dropdown-item" href="{% url 'inventory:stock_valuation_report' %}">Stock Valuation</a></li>
+                    <li><a class="dropdown-item" href="{% url 'inventory:stock_movement_report' %}">Stock Movement</a></li>
+                </ul>
+            </div>
+        </div>
+    </div>
+
+    <!-- Summary Stats -->
+    <div class="row mb-4">
+        <!-- WISP Items -->
+        <div class="col-md-6 col-lg-3 mb-3">
+            <div class="stats-card">
+                <div class="stats-header wisp-bg">
+                    <h5 class="mb-0">WISP Inventory</h5>
+                </div>
+                <div class="stats-body">
+                    <div class="stats-value">{{ wisp_item_count }}</div>
+                    <div class="stats-label">Items</div>
+                    <div class="mt-2">
+                        <strong>Total Value:</strong> R{{ wisp_stock_value|floatformat:2 }}
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- FNO Items -->
+        <div class="col-md-6 col-lg-3 mb-3">
+            <div class="stats-card">
+                <div class="stats-header fno-bg">
+                    <h5 class="mb-0">FNO Inventory</h5>
+                </div>
+                <div class="stats-body">
+                    <div class="stats-value">{{ fno_item_count }}</div>
+                    <div class="stats-label">Items</div>
+                    <div class="mt-2">
+                        <strong>Total Value:</strong> R{{ fno_stock_value|floatformat:2 }}
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Low Stock -->
+        <div class="col-md-6 col-lg-3 mb-3">
+            <div class="stats-card">
+                <div class="stats-header warning-bg">
+                    <h5 class="mb-0">Low Stock</h5>
+                </div>
+                <div class="stats-body">
+                    <div class="stats-value">{{ low_stock_items.count }}</div>
+                    <div class="stats-label">Items</div>
+                    <div class="mt-2">
+                        <a href="{% url 'inventory:item_list' %}?stock_status=low" class="btn btn-sm btn-warning w-100">View Items</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Out of Stock -->
+        <div class="col-md-6 col-lg-3 mb-3">
+            <div class="stats-card">
+                <div class="stats-header danger-bg">
+                    <h5 class="mb-0">Out of Stock</h5>
+                </div>
+                <div class="stats-body">
+                    <div class="stats-value">{{ out_of_stock_items.count }}</div>
+                    <div class="stats-label">Items</div>
+                    <div class="mt-2">
+                        <a href="{% url 'inventory:item_list' %}?stock_status=out" class="btn btn-sm btn-danger w-100">View Items</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row">
+        <!-- Quick Actions -->
+        <div class="col-lg-3 mb-4">
+            <h4 class="mb-3">Quick Actions</h4>
+
+            <a href="{% url 'inventory:item_create' %}" class="quick-action-btn d-block text-decoration-none text-center bg-primary text-white">
+                <i class="fas fa-plus-circle"></i>
+                <div>Add New Item</div>
+            </a>
+
+            <a href="{% url 'inventory:movement_create' %}" class="quick-action-btn d-block text-decoration-none text-center bg-success text-white">
+                <i class="fas fa-exchange-alt"></i>
+                <div>Record Movement</div>
+            </a>
+
+            <a href="{% url 'inventory:purchase_order_create' %}" class="quick-action-btn d-block text-decoration-none text-center bg-info text-white">
+                <i class="fas fa-file-invoice"></i>
+                <div>New Purchase Order</div>
+            </a>
+
+            <a href="{% url 'inventory:count_create' %}" class="quick-action-btn d-block text-decoration-none text-center bg-warning text-dark">
+                <i class="fas fa-clipboard-list"></i>
+                <div>Start Inventory Count</div>
+            </a>
+
+            <div class="mt-4">
+                <h5>Manage</h5>
+                <div class="list-group">
+                    <a href="{% url 'inventory:category_list' %}" class="list-group-item list-group-item-action">
+                        <i class="fas fa-folder me-2"></i> Categories
+                    </a>
+                    <a href="{% url 'inventory:location_list' %}" class="list-group-item list-group-item-action">
+                        <i class="fas fa-map-marker-alt me-2"></i> Locations
+                    </a>
+                    <a href="{% url 'inventory:supplier_list' %}" class="list-group-item list-group-item-action">
+                        <i class="fas fa-truck me-2"></i> Suppliers
+                    </a>
+                </div>
+            </div>
+        </div>
+
+        <!-- Recent Activity and Low Stock Warnings -->
+        <div class="col-lg-9">
+            <div class="row">
+                <!-- Low Stock Warnings -->
+                <div class="col-md-6 mb-4">
+                    <div class="activity-card">
+                        <div class="activity-header d-flex justify-content-between align-items-center">
+                            <h5 class="mb-0">Low Stock Items</h5>
+                            <a href="{% url 'inventory:item_list' %}?stock_status=low" class="btn btn-sm btn-outline-primary">View All</a>
+                        </div>
+                        <div class="activity-body">
+                            {% if low_stock_items %}
+                                <div class="list-group">
+                                    {% for item in low_stock_items|slice:":5" %}
+                                        <a href="{% url 'inventory:item_detail' item.pk %}" class="list-group-item list-group-item-action">
+                                            <div class="d-flex justify-content-between align-items-center">
+                                                <div>
+                                                    <strong>{{ item.name }}</strong>
+                                                    <div class="small text-muted">{{ item.get_company_display }}</div>
+                                                </div>
+                                                <div class="text-danger">
+                                                    {{ item.quantity }} / {{ item.minimum_stock }}
+                                                </div>
+                                            </div>
+                                        </a>
+                                    {% endfor %}
+                                </div>
+                                {% if low_stock_items.count > 5 %}
+                                    <div class="text-center mt-3">
+                                        <a href="{% url 'inventory:item_list' %}?stock_status=low" class="btn btn-sm btn-outline-secondary">
+                                            View {{ low_stock_items.count|add:"-5" }} more...
+                                        </a>
+                                    </div>
+                                {% endif %}
+                            {% else %}
+                                <div class="text-center py-4">
+                                    <i class="fas fa-check-circle fa-3x text-success mb-3"></i>
+                                    <p>No low stock items! Everything is well stocked.</p>
+                                </div>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Recent Stock Movements -->
+                <div class="col-md-6 mb-4">
+                    <div class="activity-card">
+                        <div class="activity-header d-flex justify-content-between align-items-center">
+                            <h5 class="mb-0">Recent Movements</h5>
+                            <a href="{% url 'inventory:movement_list' %}" class="btn btn-sm btn-outline-primary">View All</a>
+                        </div>
+                        <div class="activity-body">
+                            {% if recent_movements %}
+                                <div class="list-group">
+                                    {% for movement in recent_movements|slice:":5" %}
+                                        <div class="list-group-item">
+                                            <div class="d-flex justify-content-between align-items-center">
+                                                <div>
+                                                    <strong>{{ movement.item.name }}</strong>
+                                                    <div class="small text-muted">
+                                                        {{ movement.get_movement_type_display }}
+                                                        {% if movement.reference_number %}
+                                                            - {{ movement.reference_number }}
+                                                        {% endif %}
+                                                    </div>
+                                                </div>
+                                                <div class="{% if movement.quantity >= 0 %}text-success{% else %}text-danger{% endif %}">
+                                                    {% if movement.quantity >= 0 %}+{% endif %}{{ movement.quantity }}
+                                                </div>
+                                            </div>
+                                            <div class="small text-muted mt-1">
+                                                {{ movement.movement_date|date:"M d, Y H:i" }}
+                                            </div>
+                                        </div>
+                                    {% endfor %}
+                                </div>
+                            {% else %}
+                                <div class="text-center py-4">
+                                    <i class="fas fa-exchange-alt fa-3x text-muted mb-3"></i>
+                                    <p>No recent stock movements.</p>
+                                </div>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Pending Purchase Orders -->
+                <div class="col-md-6 mb-4">
+                    <div class="activity-card">
+                        <div class="activity-header d-flex justify-content-between align-items-center">
+                            <h5 class="mb-0">Pending Orders</h5>
+                            <a href="{% url 'inventory:purchase_order_list' %}" class="btn btn-sm btn-outline-primary">View All</a>
+                        </div>
+                        <div class="activity-body">
+                            {% if recent_purchase_orders %}
+                                <div class="list-group">
+                                    {% for po in recent_purchase_orders %}
+                                        <a href="{% url 'inventory:purchase_order_detail' po.pk %}" class="list-group-item list-group-item-action">
+                                            <div class="d-flex justify-content-between align-items-center">
+                                                <div>
+                                                    <strong>PO #{{ po.order_number }}</strong>
+                                                    <div class="small text-muted">{{ po.supplier.name }}</div>
+                                                </div>
+                                                <div>
+                                                    <span class="badge {% if po.status == 'ordered' %}bg-info{% else %}bg-warning{% endif %}">
+                                                        {{ po.get_status_display }}
+                                                    </span>
+                                                </div>
+                                            </div>
+                                            <div class="small text-muted mt-1">
+                                                Expected: {{ po.expected_delivery_date|date:"M d, Y"|default:"Not set" }}
+                                            </div>
+                                        </a>
+                                    {% endfor %}
+                                </div>
+                            {% else %}
+                                <div class="text-center py-4">
+                                    <i class="fas fa-file-invoice fa-3x text-muted mb-3"></i>
+                                    <p>No pending purchase orders.</p>
+                                </div>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Out of Stock Items -->
+                <div class="col-md-6 mb-4">
+                    <div class="activity-card">
+                        <div class="activity-header d-flex justify-content-between align-items-center">
+                            <h5 class="mb-0">Out of Stock</h5>
+                            <a href="{% url 'inventory:item_list' %}?stock_status=out" class="btn btn-sm btn-outline-primary">View All</a>
+                        </div>
+                        <div class="activity-body">
+                            {% if out_of_stock_items %}
+                                <div class="list-group">
+                                    {% for item in out_of_stock_items|slice:":5" %}
+                                        <a href="{% url 'inventory:item_detail' item.pk %}" class="list-group-item list-group-item-action">
+                                            <div class="d-flex justify-content-between align-items-center">
+                                                <div>
+                                                    <strong>{{ item.name }}</strong>
+                                                    <div class="small text-muted">{{ item.get_company_display }}</div>
+                                                </div>
+                                                <div>
+                                                    <span class="badge bg-danger">Out of Stock</span>
+                                                </div>
+                                            </div>
+                                        </a>
+                                    {% endfor %}
+                                </div>
+                                {% if out_of_stock_items.count > 5 %}
+                                    <div class="text-center mt-3">
+                                        <a href="{% url 'inventory:item_list' %}?stock_status=out" class="btn btn-sm btn-outline-secondary">
+                                            View {{ out_of_stock_items.count|add:"-5" }} more...
+                                        </a>
+                                    </div>
+                                {% endif %}
+                            {% else %}
+                                <div class="text-center py-4">
+                                    <i class="fas fa-check-circle fa-3x text-success mb-3"></i>
+                                    <p>No items are out of stock!</p>
+                                </div>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -8,6 +8,7 @@ urlpatterns = [
     path('', include('applications.dashboard.urls')),
     path('tasks/', include('applications.tasks.urls')),
     path('jobs/', include('applications.jobs.urls')),
+    path('inventory/', include('applications.inventory.urls')),
 ]
 
 if settings.DEBUG:

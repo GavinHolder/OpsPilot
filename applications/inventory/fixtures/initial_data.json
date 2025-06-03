@@ -1,0 +1,173 @@
+[
+  {
+    "model": "inventory.category",
+    "pk": 1,
+    "fields": {
+      "name": "Radio Equipment",
+      "description": "Wireless networking equipment",
+      "parent": null,
+      "company": "wisp",
+      "color": "#007bff",
+      "icon": "fa-wifi"
+    }
+  },
+  {
+    "model": "inventory.category",
+    "pk": 2,
+    "fields": {
+      "name": "Fiber Equipment",
+      "description": "Fiber optic networking equipment",
+      "parent": null,
+      "company": "fno",
+      "color": "#28a745",
+      "icon": "fa-network-wired"
+    }
+  },
+  {
+    "model": "inventory.category",
+    "pk": 3,
+    "fields": {
+      "name": "Access Points",
+      "description": "Wireless access points",
+      "parent": 1,
+      "company": "wisp",
+      "color": "#007bff",
+      "icon": "fa-wifi"
+    }
+  },
+  {
+    "model": "inventory.category",
+    "pk": 4,
+    "fields": {
+      "name": "Antennas",
+      "description": "Wireless antennas",
+      "parent": 1,
+      "company": "wisp",
+      "color": "#007bff",
+      "icon": "fa-broadcast-tower"
+    }
+  },
+  {
+    "model": "inventory.category",
+    "pk": 5,
+    "fields": {
+      "name": "Fiber Cables",
+      "description": "Fiber optic cables",
+      "parent": 2,
+      "company": "fno",
+      "color": "#28a745",
+      "icon": "fa-ethernet"
+    }
+  },
+  {
+    "model": "inventory.category",
+    "pk": 6,
+    "fields": {
+      "name": "OLTs/ONTs",
+      "description": "Optical line terminals and network terminals",
+      "parent": 2,
+      "company": "fno",
+      "color": "#28a745",
+      "icon": "fa-network-wired"
+    }
+  },
+  {
+    "model": "inventory.category",
+    "pk": 7,
+    "fields": {
+      "name": "Tools",
+      "description": "Tools and equipment",
+      "parent": null,
+      "company": "both",
+      "color": "#6c757d",
+      "icon": "fa-tools"
+    }
+  },
+  {
+    "model": "inventory.category",
+    "pk": 8,
+    "fields": {
+      "name": "Civil Materials",
+      "description": "Materials for civil works",
+      "parent": null,
+      "company": "both",
+      "color": "#fd7e14",
+      "icon": "fa-hard-hat"
+    }
+  },
+  {
+    "model": "inventory.location",
+    "pk": 1,
+    "fields": {
+      "name": "Main Warehouse",
+      "description": "Primary storage location",
+      "address": "123 Main Street, Hermanus",
+      "is_active": true,
+      "company": "both"
+    }
+  },
+  {
+    "model": "inventory.location",
+    "pk": 2,
+    "fields": {
+      "name": "WISP Office",
+      "description": "WISP office storage",
+      "address": "456 Tower Road, Hermanus",
+      "is_active": true,
+      "company": "wisp"
+    }
+  },
+  {
+    "model": "inventory.location",
+    "pk": 3,
+    "fields": {
+      "name": "FNO Office",
+      "description": "FNO office storage",
+      "address": "789 Fiber Street, Hermanus",
+      "is_active": true,
+      "company": "fno"
+    }
+  },
+  {
+    "model": "inventory.supplier",
+    "pk": 1,
+    "fields": {
+      "name": "Network Solutions Ltd",
+      "contact_person": "John Smith",
+      "email": "john@networksolutions.example",
+      "phone": "+27 12 345 6789",
+      "address": "10 Supply Road, Cape Town",
+      "website": "https://www.networksolutions.example",
+      "notes": "Primary supplier for networking equipment",
+      "is_active": true
+    }
+  },
+  {
+    "model": "inventory.supplier",
+    "pk": 2,
+    "fields": {
+      "name": "Fiber Optics Co",
+      "contact_person": "Jane Doe",
+      "email": "jane@fiberoptics.example",
+      "phone": "+27 98 765 4321",
+      "address": "20 Optical Avenue, Johannesburg",
+      "website": "https://www.fiberoptics.example",
+      "notes": "Supplier for fiber optic equipment",
+      "is_active": true
+    }
+  },
+  {
+    "model": "inventory.supplier",
+    "pk": 3,
+    "fields": {
+      "name": "Tools & Hardware",
+      "contact_person": "Bob Builder",
+      "email": "bob@toolshardware.example",
+      "phone": "+27 11 223 3445",
+      "address": "30 Hardware Street, Durban",
+      "website": "https://www.toolshardware.example",
+      "notes": "Supplier for tools and hardware",
+      "is_active": true
+    }
+  }
+]

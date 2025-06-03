@@ -19,3 +19,4 @@ application = get_wsgi_application()
 import applications.dashboard.signals
 import applications.tasks.signals
 import applications.jobs.signals
+import applications.inventory.signals
