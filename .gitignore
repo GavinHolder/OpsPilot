@@ -9,7 +9,6 @@ __pycache__/
 
 # Static files collected by Django collectstatic
 /staticfiles/
-/static/
 
 # Virtual environment
 /.venv/
