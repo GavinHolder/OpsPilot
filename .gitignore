@@ -37,3 +37,8 @@ db.sqlite3
 
 # Other common files to ignore
 .DS_Store
+
+# Syntax to remove folder from version control
+# git rm -r --cached .idea/ -> name of folder
+# git commit -m "Remove .idea folder from version control" -> comment
+# git push origin main -> push changes to remote repository
