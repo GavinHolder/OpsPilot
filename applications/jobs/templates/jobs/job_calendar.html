@@ -1,0 +1,192 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}Job Calendar | OpsPilot{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/fullcalendar@5.11.3/main.min.css">
+<style>
+    .calendar-container {
+        height: calc(100vh - 180px);
+        margin-bottom: 20px;
+    }
+    .fc-event {
+        cursor: pointer;
+        padding: 4px;
+        border-radius: 4px;
+    }
+    .fc-event.pending { background-color: #FFC107; border-color: #FFA000; }
+    .fc-event.scheduled { background-color: #2196F3; border-color: #1976D2; }
+    .fc-event.in-progress { background-color: #FF9800; border-color: #F57C00; }
+    .fc-event.completed { background-color: #4CAF50; border-color: #388E3C; }
+    .fc-event-title { font-weight: bold; }
+    .fc-list-event-title { font-weight: bold; }
+    .legend-item { display: inline-block; margin-right: 20px; }
+    .legend-color { display: inline-block; width: 15px; height: 15px; margin-right: 5px; border-radius: 3px; }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row mb-3">
+        <div class="col-md-8">
+            <h1>Job Calendar</h1>
+        </div>
+        <div class="col-md-4 text-end">
+            <a href="{% url 'jobs:job_list' %}" class="btn btn-secondary me-2">
+                <i class="fas fa-list"></i> List View
+            </a>
+            <a href="{% url 'jobs:job_board' %}" class="btn btn-secondary me-2">
+                <i class="fas fa-columns"></i> Board View
+            </a>
+            <a href="{% url 'jobs:job_map' %}" class="btn btn-secondary">
+                <i class="fas fa-map-marker-alt"></i> Map View
+            </a>
+        </div>
+    </div>
+
+    <div class="row mb-3">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <h5 class="mb-0">Job Schedule</h5>
+                        <div>
+                            <a href="{% url 'jobs:job_create' %}" class="btn btn-primary btn-sm">
+                                <i class="fas fa-plus"></i> New Job
+                            </a>
+                        </div>
+                    </div>
+                </div>
+                <div class="card-body">
+                    <div class="mb-3">
+                        <div class="legend-item"><span class="legend-color pending"></span> Pending</div>
+                        <div class="legend-item"><span class="legend-color scheduled"></span> Scheduled</div>
+                        <div class="legend-item"><span class="legend-color in-progress"></span> In Progress</div>
+                        <div class="legend-item"><span class="legend-color completed"></span> Completed</div>
+                    </div>
+                    <div class="calendar-container" id="job-calendar"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Job Details Modal -->
+<div class="modal fade" id="jobDetailsModal" tabindex="-1" aria-labelledby="jobDetailsModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="jobDetailsModalLabel">Job Details</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body" id="jobDetailsContent">
+                <div class="text-center">
+                    <div class="spinner-border" role="status">
+                        <span class="visually-hidden">Loading...</span>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                <a href="#" id="viewJobDetailBtn" class="btn btn-primary">View Full Details</a>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="https://cdn.jsdelivr.net/npm/fullcalendar@5.11.3/main.min.js"></script>
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const calendarEl = document.getElementById('job-calendar');
+
+        const calendar = new FullCalendar.Calendar(calendarEl, {
+            initialView: 'dayGridMonth',
+            headerToolbar: {
+                left: 'prev,next today',
+                center: 'title',
+                right: 'dayGridMonth,timeGridWeek,timeGridDay,listWeek'
+            },
+            views: {
+                dayGridMonth: {
+                    titleFormat: { year: 'numeric', month: 'long' }
+                }
+            },
+            height: '100%',
+            eventTimeFormat: {
+                hour: '2-digit',
+                minute: '2-digit',
+                hour12: true
+            },
+            events: '/jobs/api/calendar-events/',
+            eventDisplay: 'block',
+            eventClassNames: function(arg) {
+                return ['event', arg.event.extendedProps.status];
+            },
+            eventClick: function(info) {
+                const jobId = info.event.id;
+                const modal = new bootstrap.Modal(document.getElementById('jobDetailsModal'));
+
+                // Set the view full details link
+                document.getElementById('viewJobDetailBtn').href = `/jobs/${jobId}/`;
+
+                // Clear previous content and show loading spinner
+                document.getElementById('jobDetailsContent').innerHTML = `
+                    <div class="text-center">
+                        <div class="spinner-border" role="status">
+                            <span class="visually-hidden">Loading...</span>
+                        </div>
+                    </div>
+                `;
+
+                // Show the modal
+                modal.show();
+
+                // Fetch job details
+                fetch(`/jobs/api/${jobId}/summary/`)
+                    .then(response => response.json())
+                    .then(data => {
+                        document.getElementById('jobDetailsContent').innerHTML = `
+                            <div class="mb-3">
+                                <h4>${data.title}</h4>
+                                <span class="badge bg-${data.status_class}">${data.status}</span>
+                                <span class="badge bg-secondary">${data.job_type}</span>
+                            </div>
+                            <div class="row mb-3">
+                                <div class="col-md-6">
+                                    <p><strong>Reference:</strong> ${data.reference_number}</p>
+                                    <p><strong>Location:</strong> ${data.location}</p>
+                                    <p><strong>Priority:</strong> ${data.priority}</p>
+                                </div>
+                                <div class="col-md-6">
+                                    <p><strong>Team:</strong> ${data.team}</p>
+                                    <p><strong>Scheduled:</strong> ${data.scheduled_date}</p>
+                                    <p><strong>Created by:</strong> ${data.created_by}</p>
+                                </div>
+                            </div>
+                            <div class="mb-3">
+                                <h5>Description</h5>
+                                <p>${data.description}</p>
+                            </div>
+                        `;
+                    })
+                    .catch(error => {
+                        document.getElementById('jobDetailsContent').innerHTML = `
+                            <div class="alert alert-danger">Error loading job details</div>
+                        `;
+                        console.error('Error fetching job details:', error);
+                    });
+            }
+        });
+
+        calendar.render();
+
+        // Handle window resize to make calendar responsive
+        window.addEventListener('resize', function() {
+            calendar.updateSize();
+        });
+    });
+</script>
+{% endblock %}

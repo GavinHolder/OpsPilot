@@ -8,18 +8,28 @@ class TaskForm(forms.ModelForm):
 
     # Add a field for creating initial subtasks
     subtasks = forms.CharField(
-        widget=forms.Textarea(attrs={'rows': 3, 'placeholder': 'One subtask per line (optional)'}),
+        widget=forms.Textarea(attrs={
+            'rows': 3,
+            'class': 'form-control',
+            'placeholder': 'One subtask per line (optional)'
+        }),
         required=False,
         help_text='Enter one subtask per line'
     )
 
     # Add date picker and time picker for better UX
     deadline_date = forms.DateField(
-        widget=forms.DateInput(attrs={'type': 'date'}),
+        widget=forms.DateInput(attrs={
+            'type': 'date',
+            'class': 'form-control'
+        }),
         required=False
     )
     deadline_time = forms.TimeField(
-        widget=forms.TimeInput(attrs={'type': 'time'}),
+        widget=forms.TimeInput(attrs={
+            'type': 'time',
+            'class': 'form-control'
+        }),
         required=False
     )
 
@@ -32,8 +42,22 @@ class TaskForm(forms.ModelForm):
             'reminder_enabled'
         ]
         widgets = {
-            'description': forms.Textarea(attrs={'rows': 4}),
-            'tags': forms.TextInput(attrs={'placeholder': 'Comma-separated tags'}),
+            'title': forms.TextInput(attrs={'class': 'form-control'}),
+            'description': forms.Textarea(attrs={
+                'rows': 4,
+                'class': 'form-control'
+            }),
+            'priority': forms.Select(attrs={'class': 'form-select'}),
+            'category': forms.Select(attrs={'class': 'form-select'}),
+            'company': forms.Select(attrs={'class': 'form-select'}),
+            'assigned_to': forms.Select(attrs={'class': 'form-select'}),
+            'tags': forms.TextInput(attrs={
+                'class': 'form-control',
+                'placeholder': 'Comma-separated tags'
+            }),
+            'related_job': forms.Select(attrs={'class': 'form-select'}),
+            'related_tower': forms.Select(attrs={'class': 'form-select'}),
+            'reminder_enabled': forms.CheckboxInput(attrs={'class': 'form-check-input'})
         }
 
     def __init__(self, *args, **kwargs):
@@ -111,6 +135,10 @@ class SubtaskForm(forms.ModelForm):
     class Meta:
         model = Subtask
         fields = ['description', 'is_completed']
+        widgets = {
+            'description': forms.TextInput(attrs={'class': 'form-control'}),
+            'is_completed': forms.CheckboxInput(attrs={'class': 'form-check-input'})
+        }
 
 
 class TaskCommentForm(forms.ModelForm):
@@ -120,7 +148,11 @@ class TaskCommentForm(forms.ModelForm):
         model = TaskComment
         fields = ['content']
         widgets = {
-            'content': forms.Textarea(attrs={'rows': 3, 'placeholder': 'Add a comment...'}),
+            'content': forms.Textarea(attrs={
+                'rows': 3,
+                'class': 'form-control',
+                'placeholder': 'Add a comment...'
+            }),
         }
 
 
@@ -130,6 +162,9 @@ class TaskAttachmentForm(forms.ModelForm):
     class Meta:
         model = TaskAttachment
         fields = ['file']
+        widgets = {
+            'file': forms.FileInput(attrs={'class': 'form-control'})
+        }
 
     def save(self, commit=True):
         instance = super().save(commit=False)
@@ -151,21 +186,43 @@ class TaskFilterForm(forms.Form):
     STATUS_CHOICES = [('', 'All Statuses')] + list(Task.STATUS_CHOICES)
     COMPANY_CHOICES = [('', 'All Companies')] + list(Task.COMPANY_CHOICES)
 
-    status = forms.ChoiceField(choices=STATUS_CHOICES, required=False)
+    status = forms.ChoiceField(
+        choices=STATUS_CHOICES,
+        required=False,
+        widget=forms.Select(attrs={'class': 'form-select'})
+    )
     priority = forms.ModelChoiceField(
         queryset=None,
         required=False,
-        empty_label="All Priorities"
+        empty_label="All Priorities",
+        widget=forms.Select(attrs={'class': 'form-select'})
     )
     category = forms.ModelChoiceField(
         queryset=None,
         required=False,
-        empty_label="All Categories"
+        empty_label="All Categories",
+        widget=forms.Select(attrs={'class': 'form-select'})
     )
-    company = forms.ChoiceField(choices=COMPANY_CHOICES, required=False)
-    search = forms.CharField(required=False)
-    overdue = forms.BooleanField(required=False)
-    due_today = forms.BooleanField(required=False)
+    company = forms.ChoiceField(
+        choices=COMPANY_CHOICES,
+        required=False,
+        widget=forms.Select(attrs={'class': 'form-select'})
+    )
+    search = forms.CharField(
+        required=False,
+        widget=forms.TextInput(attrs={
+            'class': 'form-control',
+            'placeholder': 'Search tasks...'
+        })
+    )
+    overdue = forms.BooleanField(
+        required=False,
+        widget=forms.CheckboxInput(attrs={'class': 'form-check-input'})
+    )
+    due_today = forms.BooleanField(
+        required=False,
+        widget=forms.CheckboxInput(attrs={'class': 'form-check-input'})
+    )
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
@@ -182,3 +239,7 @@ class VoiceNoteForm(forms.ModelForm):
     class Meta:
         model = TaskVoiceNote
         fields = ['audio_file', 'duration']
+        widgets = {
+            'audio_file': forms.FileInput(attrs={'class': 'form-control'}),
+            'duration': forms.NumberInput(attrs={'class': 'form-control'})
+        }

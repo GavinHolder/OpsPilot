@@ -1,3 +1,57 @@
+{% if use_sample_data %}
+<div id="jobs-data-container">
+    <div class="d-flex justify-content-center align-items-center h-100">
+        <div class="spinner-border text-primary" role="status">
+            <span class="visually-hidden">Loading sample data...</span>
+        </div>
+    </div>
+</div>
+
+<script>
+    // Load sample data via AJAX
+    fetch('{% url "dashboard:sample_data" "jobs" %}')
+        .then(response => {
+            if (!response.ok) {
+                throw new Error('Network response was not ok');
+            }
+            return response.json();
+        })
+        .then(jobs => {
+            const container = document.getElementById('jobs-data-container');
+
+            // Clear loading spinner
+            container.innerHTML = '';
+
+            if (jobs.length === 0) {
+                container.innerHTML = '<p class="text-center">No open jobs found</p>';
+                return;
+            }
+
+            // Create job elements
+            jobs.forEach(job => {
+                const jobElement = document.createElement('div');
+                jobElement.className = 'job-item mb-2 p-2 border-start urgency-' + job.priority.toLowerCase();
+
+                jobElement.innerHTML = `
+                    <div class="d-flex justify-content-between align-items-center">
+                        <strong>${job.title}</strong>
+                        <span class="badge status-${job.status}">${job.status}</span>
+                    </div>
+                    <div class="small text-muted">
+                        ${job.job_type} - Assigned to: ${job.assigned_to}
+                    </div>
+                `;
+                container.appendChild(jobElement);
+            });
+        })
+        .catch(error => {
+            console.error('Error loading sample jobs data:', error);
+            document.getElementById('jobs-data-container').innerHTML =
+                '<p class="text-center text-danger">Error loading sample data</p>';
+        });
+</script>
+{% else %}
+  <!-- Your original template for database-backed data -->
 <div class="list-group">
     {% for job in jobs %}
         <div class="list-group-item list-group-item-action d-flex justify-content-between align-items-center mb-2">
@@ -32,3 +86,4 @@
 <div class="text-center mt-2">
     <a href="#" class="btn btn-sm btn-outline-primary">View All Jobs</a>
 </div>
+{% endif %}

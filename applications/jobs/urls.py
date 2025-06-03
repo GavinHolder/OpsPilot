@@ -48,4 +48,8 @@ urlpatterns = [
     path('civil-workers/create/', views.CivilWorkerCreateView.as_view(), name='civil_worker_create'),
     path('civil-workers/<int:pk>/', views.CivilWorkerDetailView.as_view(), name='civil_worker_detail'),
     path('civil-workers/<int:pk>/edit/', views.CivilWorkerUpdateView.as_view(), name='civil_worker_update'),
+
+    # Job API Endpoints
+    path('api/calendar-events/', views.job_calendar_events, name='calendar_events'),
+    path('api/<int:pk>/summary/', views.job_detail_api, name='job_detail_api'),
 ]

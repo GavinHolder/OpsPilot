@@ -1,0 +1,18 @@
+[
+  {
+    "id": 1,
+    "name": "Wireless Access Point",
+    "category": "Radio Equipment",
+    "quantity": 15,
+    "low_stock_threshold": 5,
+    "status": "in_stock"
+  },
+  {
+    "id": 2,
+    "name": "Fiber Cable (100m)",
+    "category": "Fiber Equipment",
+    "quantity": 3,
+    "low_stock_threshold": 2,
+    "status": "low_stock"
+  }
+]

@@ -159,3 +159,6 @@ DEFAULT_FROM_EMAIL = os.getenv('DEFAULT_FROM_EMAIL', 'noreply@opspilot.com')
 # Login URL
 LOGIN_URL = '/login/'
 LOGIN_REDIRECT_URL = '/'
+
+# Site URL
+SITE_URL = os.getenv('SITE_URL', 'http://127.0.0.1:8000')

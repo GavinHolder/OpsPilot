@@ -37,8 +37,10 @@
                     <i class="fas fa-tasks"></i> Tasks
                 </a>
                 <ul class="collapse list-unstyled" id="tasksSubmenu">
-                    <li><a href="#">My Tasks</a></li>
-                    <li><a href="#">Create New</a></li>
+                    <li><a href="{% url 'tasks:task_list' %}">My Tasks</a></li>
+                    <li><a href="{% url 'tasks:task_create' %}">Create New</a></li>
+                    <li><a href="{% url 'tasks:task_board' %}">Task Board</a></li>
+                    <li><a href="{% url 'tasks:task_calendar' %}">Calendar View</a></li>
                 </ul>
             </li>
             <li class="{% block jobs_active %}{% endblock %}">
@@ -46,9 +48,11 @@
                     <i class="fas fa-briefcase"></i> Jobs
                 </a>
                 <ul class="collapse list-unstyled" id="jobsSubmenu">
-                    <li><a href="#">Tower Jobs</a></li>
-                    <li><a href="#">FNO Jobs</a></li>
-                    <li><a href="#">Create New</a></li>
+                    <li><a href="{% url 'jobs:job_list' %}">All Jobs</a></li>
+                    <li><a href="{% url 'jobs:job_board' %}">Job Board</a></li>
+                    <li><a href="{% url 'jobs:job_map' %}">Job Map</a></li>
+                    <li><a href="{% url 'jobs:job_calendar' %}">Calendar View</a></li>
+                    <li><a href="{% url 'jobs:job_create' %}">Create New</a></li>
                 </ul>
             </li>
             <li class="{% block inventory_active %}{% endblock %}">
@@ -56,30 +60,33 @@
                     <i class="fas fa-boxes"></i> Inventory
                 </a>
                 <ul class="collapse list-unstyled" id="inventorySubmenu">
-                    <li><a href="#">WISP Stock</a></li>
-                    <li><a href="#">FNO Stock</a></li>
-                    <li><a href="#">Stock Movement</a></li>
+                    <li><a href="{% url 'inventory:item_list' %}">All Inventory</a></li>
+                    <li><a href="{% url 'inventory:item_create' %}">Add New Item</a></li>
+                    <li><a href="{% url 'inventory:dashboard' %}">Inventory Dashboard</a></li>
+                    <li><a href="{% url 'inventory:movement_list' %}">Stock Movement</a></li>
+                    <li><a href="{% url 'inventory:purchase_order_list' %}">Purchase Orders</a></li>
+                    <li><a href="{% url 'inventory:stock_valuation_report' %}">Inventory Reports</a></li>
                 </ul>
             </li>
             <li class="{% block calendar_active %}{% endblock %}">
-                <a href="#">
+                <a href="/calendar/">
                     <i class="fas fa-calendar-alt"></i> Calendar
                 </a>
             </li>
-            <li class="{% block notes_active %}{% endblock %}">
-                <a href="#">
-                    <i class="fas fa-sticky-note"></i> Notes
-                </a>
-            </li>
-            <li class="{% block messages_active %}{% endblock %}">
-                <a href="#">
-                    <i class="fas fa-envelope"></i> Messages
-                </a>
-            </li>
+{#            <li class="{% block notes_active %}{% endblock %}">#}
+{#                <a href="{% url 'notes:index' %}">#}
+{#                    <i class="fas fa-sticky-note"></i> Notes#}
+{#                </a>#}
+{#            </li>#}
+{#            <li class="{% block messages_active %}{% endblock %}">#}
+{#                <a href="{% url 'messages:index' %}">#}
+{#                    <i class="fas fa-envelope"></i> Messages#}
+{#                </a>#}
+{#            </li>#}
         </ul>
 
         <div class="sidebar-footer">
-            <p>© 2025 OpsPilot</p>
+            <p>© 2025 Gavin Holder</p>
         </div>
     </nav>
 
@@ -113,12 +120,12 @@
                             <i class="fas fa-user"></i>
                         </button>
                         <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="userDropdown">
-                            <li><a class="dropdown-item" href="#">Profile</a></li>
-                            <li><a class="dropdown-item" href="#">Settings</a></li>
+                            <li><a class="dropdown-item" href="{% url 'accounts:profile' %}">Profile</a></li>
+                            <li><a class="dropdown-item" href="{% url 'accounts:edit_profile' %}">Settings</a></li>
                             <li>
                                 <hr class="dropdown-divider">
                             </li>
-                            <li><a class="dropdown-item" href="#">Logout</a></li>
+                            <li><a class="dropdown-item" href="{% url 'accounts:logout' %}">Logout</a></li>
                         </ul>
                     </div>
                 </div>

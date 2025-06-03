@@ -1,0 +1,97 @@
+{% extends "base.html" %}
+
+{% block content %}
+    <div class="container mt-4">
+        <h2>Quick Add Task</h2>
+
+        <form method="post" action="{% url 'tasks:quick_add_task' %}" id="quickAddForm">
+            {% csrf_token %}
+
+            {% if form.non_field_errors %}
+                <div class="alert alert-danger">
+                    {{ form.non_field_errors }}
+                </div>
+            {% endif %}
+
+            <div class="mb-3">
+                {{ form.title.label_tag }}
+                {{ form.title }}
+                {% if form.title.errors %}
+                    <div class="invalid-feedback d-block">
+                        {{ form.title.errors }}
+                    </div>
+                {% endif %}
+            </div>
+
+            <div class="mb-3">
+                {{ form.description.label_tag }}
+                {{ form.description }}
+                {% if form.description.errors %}
+                    <div class="invalid-feedback d-block">
+                        {{ form.description.errors }}
+                    </div>
+                {% endif %}
+            </div>
+
+            <div class="row">
+                <div class="col-md-6 mb-3">
+                    {{ form.deadline.label_tag }}
+                    {{ form.deadline }}
+                    {% if form.deadline.errors %}
+                        <div class="invalid-feedback d-block">
+                            {{ form.deadline.errors }}
+                        </div>
+                    {% endif %}
+                </div>
+
+                <div class="col-md-6 mb-3">
+                    {{ form.priority.label_tag }}
+                    {{ form.priority }}
+                    {% if form.priority.errors %}
+                        <div class="invalid-feedback d-block">
+                            {{ form.priority.errors }}
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+
+            <div class="row">
+                <div class="col-md-6 mb-3">
+                    {{ form.assigned_to.label_tag }}
+                    {{ form.assigned_to }}
+                    {% if form.assigned_to.errors %}
+                        <div class="invalid-feedback d-block">
+                            {{ form.assigned_to.errors }}
+                        </div>
+                    {% endif %}
+                </div>
+
+                <div class="col-md-6 mb-3">
+                    {{ form.company.label_tag }}
+                    {{ form.company }}
+                    {% if form.company.errors %}
+                        <div class="invalid-feedback d-block">
+                            {{ form.company.errors }}
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+
+            <div class="mb-3">
+                {{ form.tags.label_tag }}
+                {{ form.tags }}
+                <small class="form-text text-muted">Separate tags with commas</small>
+                {% if form.tags.errors %}
+                    <div class="invalid-feedback d-block">
+                        {{ form.tags.errors }}
+                    </div>
+                {% endif %}
+            </div>
+
+            <div class="mt-4">
+                <button type="submit" class="btn btn-primary">Save Task</button>
+                <a href="{% url 'tasks:task_list' %}" class="btn btn-secondary">Cancel</a>
+            </div>
+        </form>
+    </div>
+{% endblock %}

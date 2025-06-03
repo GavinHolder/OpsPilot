@@ -507,18 +507,85 @@ def job_board(request):
 
 @login_required
 def job_map(request):
-    """View jobs on a map"""
-    # Get jobs with locations that have coordinates
+    """View jobs on a map based on their location coordinates"""
+    # Query jobs with valid location data
     jobs = Job.objects.filter(
-        location__isnull=False,
-        location__coordinates__isnull=False
-    ).select_related('location', 'job_type', 'priority')
+        Q(location__isnull=False) & ~Q(location__coordinates='')
+    ).select_related('location', 'job_type', 'priority', 'assigned_team', 'assigned_to', 'created_by')
+
+    # Count jobs for each status
+    job_counts = {
+        'total': jobs.count(),
+        'pending': jobs.filter(status='pending').count(),
+        'scheduled': jobs.filter(status='scheduled').count(),
+        'in_progress': jobs.filter(status='in_progress').count(),
+        'completed': jobs.filter(status='completed').count(),
+    }
 
     context = {
         'jobs': jobs,
+        'job_counts': job_counts,
     }
 
     return render(request, 'jobs/job_map.html', context)
+
+
+@login_required
+def job_calendar_events(request):
+    """API endpoint to provide job events for the calendar"""
+    # Get start and end date from query parameters if provided
+    start_date = request.GET.get('start', None)
+    end_date = request.GET.get('end', None)
+
+    # Query jobs based on date range if provided
+    jobs = Job.objects.all()
+    if start_date:
+        jobs = jobs.filter(scheduled_start_date__gte=start_date)
+    if end_date:
+        jobs = jobs.filter(scheduled_start_date__lte=end_date)
+
+    # Format jobs as calendar events
+    events = []
+    for job in jobs:
+        # Determine event color based on job status
+        events.append({
+            'id': job.pk,
+            'title': job.title,
+            'start': job.scheduled_start_date.isoformat() if job.scheduled_start_date else None,
+            'end': job.scheduled_end_date.isoformat() if job.scheduled_end_date else None,
+            'extendedProps': {
+                'status': job.status,
+                'job_type': job.job_type.name if job.job_type else '',
+                'priority': job.priority.name if job.priority else '',
+                'location': job.location.name if job.location else 'No Location',
+                'reference': job.reference_number or ''
+            }
+        })
+
+    return JsonResponse(events, safe=False)
+
+
+@login_required
+def job_detail_api(request, pk):
+    """API endpoint to provide job details for the calendar modal"""
+    try:
+        job = Job.objects.get(pk=pk)
+        data = {
+            'title': job.title,
+            'status': job.get_status_display(),
+            'status_class': job.status,
+            'job_type': job.job_type.name if job.job_type else 'N/A',
+            'reference_number': job.reference_number or 'N/A',
+            'location': job.location.name if job.location else 'No location assigned',
+            'priority': job.priority.name if job.priority else 'N/A',
+            'team': job.assigned_team.name if job.assigned_team else 'Unassigned',
+            'scheduled_date': job.scheduled_start_date.strftime('%Y-%m-%d %H:%M') if job.scheduled_start_date else 'Not scheduled',
+            'created_by': job.created_by.get_full_name() if job.created_by else 'Unknown',
+            'description': job.description or 'No description provided'
+        }
+        return JsonResponse(data)
+    except Job.DoesNotExist:
+        return JsonResponse({'error': 'Job not found'}, status=404)
 
 
 # Location Management Views

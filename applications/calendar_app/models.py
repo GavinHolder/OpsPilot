@@ -238,10 +238,6 @@ class CalendarPermission(models.Model):
     user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='calendar_permissions')
     permission = models.CharField(max_length=10, choices=PERMISSION_TYPES, default='VIEW')
 
-    # Define permission types
-    can_edit = models.BooleanField(default=False)
-    can_view = models.BooleanField(default=True)
-
     granted_by = models.ForeignKey(User, on_delete=models.CASCADE, related_name='granted_permissions')
     granted_at = models.DateTimeField(auto_now_add=True)
 

@@ -1,0 +1,367 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}Job Map | OpsPilot{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
+      integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY="
+      crossorigin=""/>
+<style>
+    #jobMap {
+        height: 600px;
+        width: 100%;
+        border-radius: 8px;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    }
+    .job-popup h5 {
+        margin-top: 0;
+        margin-bottom: 8px;
+    }
+    .job-popup .badge {
+        margin-right: 4px;
+    }
+    .map-controls {
+        margin-bottom: 16px;
+    }
+    .legend {
+        background: white;
+        padding: 10px;
+        border-radius: 4px;
+        box-shadow: 0 1px 3px rgba(0,0,0,0.2);
+    }
+    .legend-item {
+        margin-bottom: 4px;
+        display: flex;
+        align-items: center;
+    }
+    .legend-color {
+        width: 15px;
+        height: 15px;
+        border-radius: 50%;
+        margin-right: 8px;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid mt-4">
+    <div class="d-flex justify-content-between align-items-center mb-3">
+        <h2>Job Map</h2>
+        <div>
+            <a href="{% url 'jobs:job_list' %}" class="btn btn-outline-secondary btn-sm">
+                <i class="bi bi-list"></i> List View
+            </a>
+            <a href="{% url 'jobs:job_board' %}" class="btn btn-outline-secondary btn-sm">
+                <i class="bi bi-kanban"></i> Board View
+            </a>
+            <a href="{% url 'jobs:job_calendar' %}" class="btn btn-outline-secondary btn-sm">
+                <i class="bi bi-calendar"></i> Calendar View
+            </a>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-md-9">
+            <div class="card">
+                <div class="card-body">
+                    <div class="map-controls">
+                        <div class="btn-group btn-group-sm" role="group">
+                            <button type="button" class="btn btn-outline-primary" id="showAllJobs">All Jobs</button>
+                            <button type="button" class="btn btn-outline-primary" id="showPendingJobs">Pending</button>
+                            <button type="button" class="btn btn-outline-primary" id="showScheduledJobs">Scheduled</button>
+                            <button type="button" class="btn btn-outline-primary" id="showInProgressJobs">In Progress</button>
+                            <button type="button" class="btn btn-outline-primary" id="showCompletedJobs">Completed</button>
+                        </div>
+                    </div>
+                    <div id="jobMap"></div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-3">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="card-title mb-0">Job Details</h5>
+                </div>
+                <div class="card-body">
+                    <div id="jobDetails">
+                        <p class="text-muted">Select a job on the map to view details</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="card mt-3">
+                <div class="card-header">
+                    <h5 class="card-title mb-0">Jobs by Location</h5>
+                </div>
+                <div class="card-body">
+                    <div class="list-group job-list">
+                        {% for job in jobs %}
+                        <a href="{% url 'jobs:job_detail' pk=job.pk %}"
+                           class="list-group-item list-group-item-action job-item"
+                           data-job-id="{{ job.id }}"
+                           data-lat="{{ job.location.coordinates.y }}"
+                           data-lng="{{ job.location.coordinates.x }}">
+                            <div class="d-flex w-100 justify-content-between">
+                                <h6 class="mb-1">{{ job.title }}</h6>
+                                <small class="badge bg-{{ job.get_status_class }}">{{ job.get_status_display }}</small>
+                            </div>
+                            <small>{{ job.location.name }}</small>
+                        </a>
+                        {% empty %}
+                        <p class="text-muted">No jobs with location data found.</p>
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
+        integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo="
+        crossorigin=""></script>
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Initialize map
+        var map = L.map('jobMap').setView([51.505, -0.09], 13); // Default view, will be updated
+
+        // Add OpenStreetMap tile layer
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+            attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+        }).addTo(map);
+
+        // Job markers and data
+        var jobMarkers = [];
+        var bounds = L.latLngBounds();
+        var hasMarkers = false;
+
+        // Status colors for markers
+        var statusColors = {
+            'pending': '#ffc107',    // warning/yellow
+            'scheduled': '#0d6efd',  // primary/blue
+            'in_progress': '#fd7e14', // orange
+            'completed': '#198754',  // success/green
+            'cancelled': '#dc3545'   // danger/red
+        };
+
+        // Add markers for each job
+        {% for job in jobs %}
+            {% if job.location.coordinates %}
+                (function() {
+                    var lat = {{ job.location.coordinates.y }};
+                    var lng = {{ job.location.coordinates.x }};
+                    var jobId = {{ job.id }};
+                    var status = '{{ job.status }}';
+
+                    var markerColor = statusColors[status] || '#6c757d';
+
+                    // Create marker with custom color
+                    var markerIcon = L.divIcon({
+                        className: 'job-marker',
+                        html: `<div style="background-color: ${markerColor}; width: 12px; height: 12px; border-radius: 50%; border: 2px solid white;"></div>`,
+                        iconSize: [16, 16],
+                        iconAnchor: [8, 8]
+                    });
+
+                    var marker = L.marker([lat, lng], {icon: markerIcon});
+
+                    // Popup content
+                    var popupContent = `
+                        <div class="job-popup">
+                            <h5>{{ job.title }}</h5>
+                            <p>
+                                <span class="badge bg-{{ job.get_status_class }}">{{ job.get_status_display }}</span>
+                                {% if job.priority %}
+                                <span class="badge bg-{{ job.priority.get_badge_class }}">{{ job.priority.name }}</span>
+                                {% endif %}
+                            </p>
+                            <p><strong>Location:</strong> {{ job.location.name }}</p>
+                            {% if job.scheduled_start_date %}
+                            <p><strong>Date:</strong> {{ job.scheduled_start_date|date:"M d, Y" }}</p>
+                            {% endif %}
+                            <a href="{% url 'jobs:job_detail' pk=job.pk %}" class="btn btn-sm btn-primary">View Details</a>
+                        </div>
+                    `;
+
+                    marker.bindPopup(popupContent);
+                    marker.addTo(map);
+                    marker.jobId = jobId;
+                    marker.status = status;
+
+                    // Store marker reference
+                    jobMarkers.push(marker);
+
+                    // Update bounds
+                    bounds.extend([lat, lng]);
+                    hasMarkers = true;
+
+                    // Click event for marker
+                    marker.on('click', function() {
+                        updateJobDetails({{ job.id }});
+                        highlightJobInList({{ job.id }});
+                    });
+                })();
+            {% endif %}
+        {% endfor %}
+
+        // Fit map to bounds if we have markers
+        if (hasMarkers) {
+            map.fitBounds(bounds, { padding: [30, 30] });
+        }
+
+        // Add legend
+        var legend = L.control({position: 'bottomright'});
+        legend.onAdd = function(map) {
+            var div = L.DomUtil.create('div', 'legend');
+            div.innerHTML = `
+                <h6>Job Status</h6>
+                <div class="legend-item">
+                    <div class="legend-color" style="background-color: ${statusColors.pending}"></div>
+                    <span>Pending</span>
+                </div>
+                <div class="legend-item">
+                    <div class="legend-color" style="background-color: ${statusColors.scheduled}"></div>
+                    <span>Scheduled</span>
+                </div>
+                <div class="legend-item">
+                    <div class="legend-color" style="background-color: ${statusColors.in_progress}"></div>
+                    <span>In Progress</span>
+                </div>
+                <div class="legend-item">
+                    <div class="legend-color" style="background-color: ${statusColors.completed}"></div>
+                    <span>Completed</span>
+                </div>
+            `;
+            return div;
+        };
+        legend.addTo(map);
+
+        // Filter buttons functionality
+        document.getElementById('showAllJobs').addEventListener('click', function() {
+            filterJobMarkers('all');
+        });
+
+        document.getElementById('showPendingJobs').addEventListener('click', function() {
+            filterJobMarkers('pending');
+        });
+
+        document.getElementById('showScheduledJobs').addEventListener('click', function() {
+            filterJobMarkers('scheduled');
+        });
+
+        document.getElementById('showInProgressJobs').addEventListener('click', function() {
+            filterJobMarkers('in_progress');
+        });
+
+        document.getElementById('showCompletedJobs').addEventListener('click', function() {
+            filterJobMarkers('completed');
+        });
+
+        function filterJobMarkers(status) {
+            var filteredBounds = L.latLngBounds();
+            var hasFilteredMarkers = false;
+
+            jobMarkers.forEach(function(marker) {
+                if (status === 'all' || marker.status === status) {
+                    marker.addTo(map);
+                    filteredBounds.extend(marker.getLatLng());
+                    hasFilteredMarkers = true;
+                } else {
+                    map.removeLayer(marker);
+                }
+            });
+
+            if (hasFilteredMarkers) {
+                map.fitBounds(filteredBounds, { padding: [30, 30] });
+            }
+
+            // Update active button state
+            document.querySelectorAll('.map-controls .btn').forEach(function(btn) {
+                btn.classList.remove('active');
+            });
+
+            if (status === 'all') {
+                document.getElementById('showAllJobs').classList.add('active');
+            } else if (status === 'pending') {
+                document.getElementById('showPendingJobs').classList.add('active');
+            } else if (status === 'scheduled') {
+                document.getElementById('showScheduledJobs').classList.add('active');
+            } else if (status === 'in_progress') {
+                document.getElementById('showInProgressJobs').classList.add('active');
+            } else if (status === 'completed') {
+                document.getElementById('showCompletedJobs').classList.add('active');
+            }
+        }
+
+        // Job list interaction
+        document.querySelectorAll('.job-item').forEach(function(item) {
+            item.addEventListener('click', function(e) {
+                // Prevent default link behavior
+                e.preventDefault();
+
+                // Get job coordinates
+                var jobId = this.getAttribute('data-job-id');
+                var lat = parseFloat(this.getAttribute('data-lat'));
+                var lng = parseFloat(this.getAttribute('data-lng'));
+
+                // Pan to job location and open popup
+                map.setView([lat, lng], 15);
+
+                // Find and open the marker popup
+                jobMarkers.forEach(function(marker) {
+                    if (marker.jobId == jobId) {
+                        marker.openPopup();
+                    }
+                });
+
+                // Update job details
+                updateJobDetails(jobId);
+                highlightJobInList(jobId);
+            });
+        });
+
+        // Function to update job details panel
+        function updateJobDetails(jobId) {
+            // In a real application, you might fetch details via AJAX
+            // For this example, we'll use data attributes already on the page
+            var jobItem = document.querySelector(`.job-item[data-job-id="${jobId}"]`);
+            if (jobItem) {
+                var jobTitle = jobItem.querySelector('h6').textContent;
+                var jobStatus = jobItem.querySelector('.badge').textContent;
+                var jobLocation = jobItem.querySelector('small').textContent;
+
+                var detailsHtml = `
+                    <h5>${jobTitle}</h5>
+                    <p><span class="badge bg-primary">${jobStatus}</span></p>
+                    <p><strong>Location:</strong> ${jobLocation}</p>
+                    <a href="/jobs/${jobId}/" class="btn btn-primary btn-sm">View Full Details</a>
+                `;
+
+                document.getElementById('jobDetails').innerHTML = detailsHtml;
+            }
+        }
+
+        // Function to highlight selected job in the list
+        function highlightJobInList(jobId) {
+            // Remove highlight from all items
+            document.querySelectorAll('.job-item').forEach(function(item) {
+                item.classList.remove('active');
+            });
+
+            // Add highlight to selected item
+            var jobItem = document.querySelector(`.job-item[data-job-id="${jobId}"]`);
+            if (jobItem) {
+                jobItem.classList.add('active');
+                jobItem.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+            }
+        }
+
+        // Initially show all jobs
+        document.getElementById('showAllJobs').classList.add('active');
+    });
+</script>
+{% endblock %}

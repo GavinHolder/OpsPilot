@@ -1,0 +1,24 @@
+[
+  {
+    "id": 1,
+    "title": "Install new wireless access point",
+    "status": "pending",
+    "priority": "high",
+    "job_type": "installation",
+    "assigned_to": "John Smith",
+    "scheduled_start_date": "2023-06-15T09:00:00Z",
+    "scheduled_end_date": "2023-06-15T17:00:00Z",
+    "description": "Install a new wireless access point at client location"
+  },
+  {
+    "id": 2,
+    "title": "Fiber cable repair",
+    "status": "in_progress",
+    "priority": "medium",
+    "job_type": "repair",
+    "assigned_to": "Sarah Johnson",
+    "scheduled_start_date": "2023-06-16T10:00:00Z",
+    "scheduled_end_date": "2023-06-16T15:00:00Z",
+    "description": "Repair damaged fiber cable at junction box"
+  }
+]
