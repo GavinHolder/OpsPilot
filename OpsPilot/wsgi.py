@@ -14,3 +14,6 @@ from django.core.wsgi import get_wsgi_application
 os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'OpsPilot.settings')
 
 application = get_wsgi_application()
+
+# Import dashboard signals here
+import applications.dashboard.signals

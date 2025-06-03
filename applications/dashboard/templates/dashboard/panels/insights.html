@@ -1,0 +1,26 @@
+<div class="list-group">
+    {% for insight in insights %}
+        <div class="list-group-item list-group-item-action mb-2">
+            <div class="d-flex w-100 justify-content-between">
+                <h6 class="mb-1">{{ insight.message }}</h6>
+                <small>
+                    {% if insight.type == 'performance' %}
+                        <i class="fas fa-chart-line text-success"></i>
+                    {% elif insight.type == 'pattern' %}
+                        <i class="fas fa-lightbulb text-warning"></i>
+                    {% elif insight.type == 'warning' %}
+                        <i class="fas fa-exclamation-triangle text-danger"></i>
+                    {% endif %}
+                </small>
+            </div>
+        </div>
+    {% empty %}
+        <div class="text-center text-muted py-3">
+            <i class="fas fa-lightbulb fa-2x mb-2"></i>
+            <p>No insights available</p>
+        </div>
+    {% endfor %}
+</div>
+<div class="text-center mt-2">
+    <a href="#" class="btn btn-sm btn-outline-primary">View All Insights</a>
+</div>
