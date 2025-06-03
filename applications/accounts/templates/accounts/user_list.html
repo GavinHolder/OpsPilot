@@ -1,0 +1,51 @@
+{% extends 'base.html' %}
+
+{% block title %}User Management - OpsPilot{% endblock %}
+
+{% block content %}
+    <div class="container my-4">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <h2>User Management</h2>
+            <a href="{% url 'accounts:register' %}" class="btn btn-primary">
+                <i class="fas fa-plus-circle"></i> Add User
+            </a>
+        </div>
+
+        <div class="card shadow">
+            <div class="card-header bg-primary text-white">
+                <div class="d-flex justify-content-between align-items-center">
+                    <h5 class="mb-0">Users</h5>
+                    <div class="input-group" style="max-width: 300px;">
+                        <input type="text" id="userSearch" class="form-control" placeholder="Search users..."
+                               hx-get="{% url 'accounts:user_list' %}"
+                               hx-trigger="keyup changed delay:500ms"
+                               hx-target="#userTable"
+                               name="search">
+                        <button class="btn btn-outline-light" type="button">
+                            <i class="fas fa-search"></i>
+                        </button>
+                    </div>
+                </div>
+            </div>
+            <div class="card-body p-0">
+                <div class="table-responsive">
+                    <table class="table table-hover mb-0">
+                        <thead class="table-light">
+                        <tr>
+                            <th>User</th>
+                            <th>Role</th>
+                            <th>Department</th>
+                            <th>Email</th>
+                            <th>Status</th>
+                            <th>Actions</th>
+                        </tr>
+                        </thead>
+                        <tbody id="userTable">
+                        {% include 'accounts/partials/user_table.html' %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+{% endblock %}

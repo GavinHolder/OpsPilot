@@ -1,0 +1,62 @@
+{% for user_obj in users %}
+    <tr>
+        <td>
+            <div class="d-flex align-items-center">
+                {% if user_obj.profile.profile_image %}
+                    <img src="{{ user_obj.profile.profile_image.url }}" alt="Profile" class="rounded-circle me-2" style="width: 40px; height: 40px; object-fit: cover;">
+                {% else %}
+                    <div class="bg-light rounded-circle d-flex justify-content-center align-items-center me-2" style="width: 40px; height: 40px;">
+                        <span class="text-secondary">{{ user_obj.first_name|first|upper }}{{ user_obj.last_name|first|upper }}</span>
+                    </div>
+                {% endif %}
+                <div>
+                    <a href="{% url 'accounts:user_detail' user_obj.id %}" class="text-decoration-none">
+                        {{ user_obj.get_full_name|default:user_obj.username }}
+                    </a>
+                    <small class="d-block text-muted">@{{ user_obj.username }}</small>
+                </div>
+            </div>
+        </td>
+        <td>{{ user_obj.profile.get_role_display }}</td>
+        <td>{{ user_obj.profile.department|default:"—" }}</td>
+        <td>{{ user_obj.email }}</td>
+        <td>
+            {% if user_obj.is_active %}
+                <span class="badge bg-success">Active</span>
+            {% else %}
+                <span class="badge bg-danger">Inactive</span>
+            {% endif %}
+        </td>
+        <td>
+            <div class="btn-group">
+                <a href="{% url 'accounts:user_detail' user_obj.id %}" class="btn btn-sm btn-outline-primary">
+                    <i class="fas fa-eye"></i>
+                </a>
+                <button class="btn btn-sm btn-outline-secondary"
+                        hx-get="{% url 'accounts:user_detail' user_obj.id %}"
+                        hx-target="#userDetailModal .modal-content"
+                        data-bs-toggle="modal"
+                        data-bs-target="#userDetailModal">
+                    <i class="fas fa-info-circle"></i>
+                </button>
+
+                {% if user.is_staff %}
+                    <button class="btn btn-sm btn-outline-warning"
+                            hx-post="{% url 'accounts:toggle_user_status' user_obj.id %}"
+                            hx-target="closest tr"
+                            hx-confirm="{% if user_obj.is_active %}Deactivate{% else %}Activate{% endif %} this user?">
+                        {% if user_obj.is_active %}
+                            <i class="fas fa-ban"></i>
+                        {% else %}
+                            <i class="fas fa-check"></i>
+                        {% endif %}
+                    </button>
+                {% endif %}
+            </div>
+        </td>
+    </tr>
+{% empty %}
+    <tr>
+        <td colspan="6" class="text-center py-3">No users found</td>
+    </tr>
+{% endfor %}

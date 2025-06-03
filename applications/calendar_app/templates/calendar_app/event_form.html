@@ -1,0 +1,303 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}{{ event.title }} - OpsPilot{% endblock %}
+
+{% block extra_css %}
+    <link rel="stylesheet" href="{% static 'css/calendar.css' %}">
+{% endblock %}
+
+{% block content %}
+    <div class="container-fluid">
+        <!-- Page Header -->
+        <div class="row mb-4">
+            <div class="col-12">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <h1 class="h3 mb-0">{{ event.title }}</h1>
+                        <p class="text-muted">
+                            <span class="badge badge-secondary mr-2">{{ event.category.name }}</span>
+                            <span class="badge badge-{% if event.priority == 'HIGH' %}danger{% elif event.priority == 'MEDIUM' %}warning{% else %}info{% endif %}">
+                            {{ event.get_priority_display }}
+                        </span>
+                            {% if event.is_cancelled %}
+                                <span class="badge badge-dark">Cancelled</span>
+                            {% endif %}
+                        </p>
+                    </div>
+                    <div class="btn-group">
+                        {% if can_edit %}
+                            <a href="{% url 'calendar_app:event_edit' event.pk %}" class="btn btn-primary">
+                                <i class="fas fa-edit"></i> Edit
+                            </a>
+                            <button type="button" class="btn btn-danger" data-toggle="modal" data-target="#deleteModal">
+                                <i class="fas fa-trash"></i> Delete
+                            </button>
+                        {% endif %}
+                        <a href="{% url 'calendar_app:calendar_view' %}" class="btn btn-outline-secondary">
+                            <i class="fas fa-arrow-left"></i> Back to Calendar
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="row">
+            <!-- Event Details -->
+            <div class="col-md-8">
+                <div class="card">
+                    <div class="card-header">
+                        <h5 class="mb-0">Event Details</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="row">
+                            <div class="col-md-6">
+                                <h6><i class="fas fa-calendar"></i> Date & Time</h6>
+                                <p>
+                                    <strong>Start:</strong> {{ event.start_datetime|date:"F d, Y \a\t H:i" }}<br>
+                                    <strong>End:</strong> {{ event.end_datetime|date:"F d, Y \a\t H:i" }}<br>
+                                    <strong>Duration:</strong> {{ event.duration }} minutes
+                                    {% if event.all_day %}
+                                        <br><span class="badge badge-info">All Day Event</span>
+                                    {% endif %}
+                                </p>
+                            </div>
+                            <div class="col-md-6">
+                                {% if event.location %}
+                                    <h6><i class="fas fa-map-marker-alt"></i> Location</h6>
+                                    <p>{{ event.location }}</p>
+                                {% endif %}
+                            </div>
+                        </div>
+
+                        {% if event.description %}
+                            <div class="row mt-3">
+                                <div class="col-12">
+                                    <h6><i class="fas fa-align-left"></i> Description</h6>
+                                    <div class="event-description">
+                                        {{ event.description|linebreaks }}
+                                    </div>
+                                </div>
+                            </div>
+                        {% endif %}
+
+                        <!-- Linked Items -->
+                        {% if event.linked_task or event.linked_job %}
+                            <div class="row mt-3">
+                                <div class="col-12">
+                                    <h6><i class="fas fa-link"></i> Linked Items</h6>
+                                    {% if event.linked_task %}
+                                        <div class="alert alert-info">
+                                            <i class="fas fa-tasks"></i>
+                                            <strong>Linked Task:</strong>
+                                            <a href="#" class="alert-link">{{ event.linked_task.title }}</a>
+                                        </div>
+                                    {% endif %}
+                                    {% if event.linked_job %}
+                                        <div class="alert alert-success">
+                                            <i class="fas fa-briefcase"></i>
+                                            <strong>Linked Job:</strong>
+                                            <a href="#" class="alert-link">{{ event.linked_job.title }}</a>
+                                        </div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        {% endif %}
+
+                        <!-- Recurrence Info -->
+                        {% if event.recurrence_type != 'NONE' %}
+                            <div class="row mt-3">
+                                <div class="col-12">
+                                    <h6><i class="fas fa-redo"></i> Recurrence</h6>
+                                    <p>
+                                        <strong>Type:</strong> {{ event.get_recurrence_type_display }}<br>
+                                        <strong>Interval:</strong> Every {{ event.recurrence_interval }}
+                                        {% if event.recurrence_type == 'DAILY' %}day(s){% elif event.recurrence_type == 'WEEKLY' %}week(s){% elif event.recurrence_type == 'MONTHLY' %}month(s){% elif event.recurrence_type == 'YEARLY' %}year(s){% endif %}<br>
+                                        {% if event.recurrence_end_date %}
+                                            <strong>Until:</strong> {{ event.recurrence_end_date|date:"F d, Y" }}
+                                        {% endif %}
+                                    </p>
+                                </div>
+                            </div>
+                        {% endif %}
+
+                        <!-- Event Metadata -->
+                        <div class="row mt-3">
+                            <div class="col-12">
+                                <small class="text-muted">
+                                    Created by {{ event.created_by.get_full_name|default:event.created_by.username }}
+                                    on {{ event.created_at|date:"F d, Y \a\t H:i" }}
+                                    {% if event.updated_at != event.created_at %}
+                                        | Last updated: {{ event.updated_at|date:"F d, Y \a\t H:i" }}
+                                    {% endif %}
+                                </small>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- RSVP Section for Non-Organizers -->
+                {% if user_attendee and not user_attendee.is_organizer %}
+                    <div class="card mt-3">
+                        <div class="card-header">
+                            <h5 class="mb-0">Your Response</h5>
+                        </div>
+                        <div class="card-body">
+                            <p><strong>Current Status:</strong>
+                                <span class="badge badge-{% if user_attendee.status == 'ACCEPTED' %}success{% elif user_attendee.status == 'DECLINED' %}danger{% elif user_attendee.status == 'TENTATIVE' %}warning{% else %}secondary{% endif %}">
+                            {{ user_attendee.get_status_display }}
+                        </span>
+                            </p>
+
+                            <div class="btn-group mb-3">
+                                <button class="btn btn-success rsvp-btn" data-event-id="{{ event.pk }}" data-status="ACCEPTED">
+                                    <i class="fas fa-check"></i> Accept
+                                </button>
+                                <button class="btn btn-warning rsvp-btn" data-event-id="{{ event.pk }}" data-status="TENTATIVE">
+                                    <i class="fas fa-question"></i> Maybe
+                                </button>
+                                <button class="btn btn-danger rsvp-btn" data-event-id="{{ event.pk }}" data-status="DECLINED">
+                                    <i class="fas fa-times"></i> Decline
+                                </button>
+                            </div>
+
+                            {% if user_attendee.notes %}
+                                <div class="mt-2">
+                                    <strong>Your Notes:</strong>
+                                    <p>{{ user_attendee.notes }}</p>
+                                </div>
+                            {% endif %}
+                        </div>
+                    </div>
+                {% endif %}
+            </div>
+
+            <!-- Sidebar -->
+            <div class="col-md-4">
+                <!-- Attendees -->
+                <div class="card">
+                    <div class="card-header d-flex justify-content-between align-items-center">
+                        <h5 class="mb-0">Attendees</h5>
+                        <span class="badge badge-primary">{{ attendees.count }}</span>
+                    </div>
+                    <div class="card-body">
+                        {% for attendee in attendees %}
+                            <div class="d-flex align-items-center mb-2">
+                                <div class="mr-2">
+                                    {% if attendee.user.profile.profile_image %}
+                                        <img src="{{ attendee.user.profile.profile_image.url }}" class="rounded-circle" width="32" height="32" alt="{{ attendee.user.username }}">
+                                    {% else %}
+                                        <div class="rounded-circle bg-secondary d-flex align-items-center justify-content-center" style="width: 32px; height: 32px;">
+                                            <i class="fas fa-user text-white"></i>
+                                        </div>
+                                    {% endif %}
+                                </div>
+                                <div class="flex-grow-1">
+                                    <strong>{{ attendee.user.get_full_name|default:attendee.user.username }}</strong>
+                                    {% if attendee.is_organizer %}
+                                        <span class="badge badge-primary badge-sm">Organizer</span>
+                                    {% endif %}
+                                    <br>
+                                    <span class="badge badge-{% if attendee.status == 'ACCEPTED' %}success{% elif attendee.status == 'DECLINED' %}danger{% elif attendee.status == 'TENTATIVE' %}warning{% else %}secondary{% endif %} badge-sm">
+                                    {{ attendee.get_status_display }}
+                                </span>
+                                </div>
+                            </div>
+                        {% endfor %}
+                    </div>
+                </div>
+
+                <!-- Reminder Settings -->
+                {% if event.send_reminders %}
+                    <div class="card mt-3">
+                        <div class="card-header">
+                            <h5 class="mb-0">Reminders</h5>
+                        </div>
+                        <div class="card-body">
+                            <p><i class="fas fa-bell"></i> Reminder set for {{ event.reminder_minutes }} minutes before the event</p>
+                        </div>
+                    </div>
+                {% endif %}
+
+                <!-- Quick Actions -->
+                <div class="card mt-3">
+                    <div class="card-header">
+                        <h5 class="mb-0">Quick Actions</h5>
+                    </div>
+                    <div class="card-body">
+                        <a href="{% url 'calendar_app:event_create' %}?start_datetime={{ event.end_datetime|date:'Y-m-d H:i' }}" class="btn btn-outline-primary btn-sm btn-block">
+                            <i class="fas fa-plus"></i> Create Follow-up Event
+                        </a>
+                        {% if event.linked_task %}
+                            <a href="#" class="btn btn-outline-success btn-sm btn-block">
+                                <i class="fas fa-tasks"></i> View Linked Task
+                            </a>
+                        {% endif %}
+                        {% if event.linked_job %}
+                            <a href="#" class="btn btn-outline-info btn-sm btn-block">
+                                <i class="fas fa-briefcase"></i> View Linked Job
+                            </a>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Delete Confirmation Modal -->
+    {% if can_edit %}
+        <div class="modal fade" id="deleteModal" tabindex="-1">
+            <div class="modal-dialog">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title">Delete Event</h5>
+                        <button type="button" class="close" data-dismiss="modal">
+                            <span>&times;</span>
+                        </button>
+                    </div>
+                    <div class="modal-body">
+                        <p>Are you sure you want to delete this event?</p>
+                        <p><strong>{{ event.title }}</strong></p>
+                        <p class="text-muted">This action cannot be undone.</p>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancel</button>
+                        <form method="post" action="{% url 'calendar_app:event_delete' event.pk %}" class="d-inline">
+                            {% csrf_token %}
+                            <button type="submit" class="btn btn-danger">Delete Event</button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+    {% endif %}
+{% endblock %}
+
+{% block extra_js %}
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // RSVP functionality
+            document.querySelectorAll('.rsvp-btn').forEach(button => {
+                button.addEventListener('click', function() {
+                    const eventId = this.dataset.eventId;
+                    const status = this.dataset.status;
+
+                    fetch(`/calendar/event/${eventId}/rsvp/`, {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/x-www-form-urlencoded',
+                            'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value
+                        },
+                        body: `status=${status}`
+                    })
+                        .then(response => response.json())
+                        .then(data => {
+                            if (data.success) {
+                                location.reload();
+                            }
+                        });
+                });
+            });
+        });
+    </script>
+{% endblock %}

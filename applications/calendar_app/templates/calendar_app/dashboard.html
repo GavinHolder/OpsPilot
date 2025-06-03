@@ -1,0 +1,368 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Calendar Dashboard - OpsPilot{% endblock %}
+
+{% block extra_css %}
+    <link rel="stylesheet" href="{% static 'css/calendar.css' %}">
+{% endblock %}
+
+{% block content %}
+    <div class="container-fluid">
+        <!-- Page Header -->
+        <div class="row mb-4">
+            <div class="col-12">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <h1 class="h3 mb-0">📅 Calendar Dashboard</h1>
+                        <p class="text-muted">Your schedule and events overview</p>
+                    </div>
+                    <div class="btn-group">
+                        <a href="{% url 'calendar_app:event_create' %}" class="btn btn-primary">
+                            <i class="fas fa-plus"></i> New Event
+                        </a>
+                        <a href="{% url 'calendar_app:calendar_view' %}" class="btn btn-outline-secondary">
+                            <i class="fas fa-calendar-alt"></i> Full Calendar
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Quick Stats -->
+        <div class="row mb-4">
+            <div class="col-md-3">
+                <div class="card border-left-primary">
+                    <div class="card-body">
+                        <div class="row no-gutters align-items-center">
+                            <div class="col mr-2">
+                                <div class="text-xs font-weight-bold text-primary text-uppercase mb-1">
+                                    Today's Events
+                                </div>
+                                <div class="h5 mb-0 font-weight-bold text-gray-800">{{ today_events.count }}</div>
+                            </div>
+                            <div class="col-auto">
+                                <i class="fas fa-calendar-day fa-2x text-gray-300"></i>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="card border-left-success">
+                    <div class="card-body">
+                        <div class="row no-gutters align-items-center">
+                            <div class="col mr-2">
+                                <div class="text-xs font-weight-bold text-success text-uppercase mb-1">
+                                    Upcoming Events
+                                </div>
+                                <div class="h5 mb-0 font-weight-bold text-gray-800">{{ upcoming_events.count }}</div>
+                            </div>
+                            <div class="col-auto">
+                                <i class="fas fa-clock fa-2x text-gray-300"></i>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="card border-left-warning">
+                    <div class="card-body">
+                        <div class="row no-gutters align-items-center">
+                            <div class="col mr-2">
+                                <div class="text-xs font-weight-bold text-warning text-uppercase mb-1">
+                                    Pending Invitations
+                                </div>
+                                <div class="h5 mb-0 font-weight-bold text-gray-800">{{ pending_invitations.count }}</div>
+                            </div>
+                            <div class="col-auto">
+                                <i class="fas fa-envelope fa-2x text-gray-300"></i>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="card border-left-info">
+                    <div class="card-body">
+                        <div class="row no-gutters align-items-center">
+                            <div class="col mr-2">
+                                <div class="text-xs font-weight-bold text-info text-uppercase mb-1">
+                                    My Calendars
+                                </div>
+                                <div class="h5 mb-0 font-weight-bold text-gray-800">{{ user_calendars.count }}</div>
+                            </div>
+                            <div class="col-auto">
+                                <i class="fas fa-calendar fa-2x text-gray-300"></i>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="row">
+            <!-- Today's Events -->
+            <div class="col-md-6">
+                <div class="card">
+                    <div class="card-header d-flex justify-content-between align-items-center">
+                        <h5 class="mb-0">📅 Today's Events</h5>
+                        <span class="badge badge-primary">{{ today_events.count }}</span>
+                    </div>
+                    <div class="card-body">
+                        {% if today_events %}
+                            <div class="event-list">
+                                {% for event in today_events %}
+                                    <div class="event-item mb-3 p-3 border-left" style="border-left-color: {{ event.category.color }};">
+                                        <div class="d-flex justify-content-between align-items-start">
+                                            <div class="flex-grow-1">
+                                                <h6 class="mb-1">
+                                                    <a href="{% url 'calendar_app:event_detail' event.pk %}" class="text-decoration-none">
+                                                        {{ event.title }}
+                                                    </a>
+                                                </h6>
+                                                <p class="text-muted mb-1">
+                                                    <i class="fas fa-clock"></i>
+                                                    {{ event.start_datetime|time:"H:i" }} - {{ event.end_datetime|time:"H:i" }}
+                                                    {% if event.location %}
+                                                        <br><i class="fas fa-map-marker-alt"></i> {{ event.location }}
+                                                    {% endif %}
+                                                </p>
+                                                <span class="badge badge-secondary badge-sm">{{ event.category.name }}</span>
+                                                {% if event.priority == 'HIGH' or event.priority == 'URGENT' %}
+                                                    <span class="badge badge-danger badge-sm">{{ event.get_priority_display }}</span>
+                                                {% endif %}
+                                            </div>
+                                        </div>
+                                    </div>
+                                {% endfor %}
+                            </div>
+                        {% else %}
+                            <div class="text-center py-4">
+                                <i class="fas fa-calendar-check fa-3x text-muted mb-3"></i>
+                                <p class="text-muted">No events scheduled for today</p>
+                                <a href="{% url 'calendar_app:event_create' %}" class="btn btn-primary btn-sm">Schedule Event</a>
+                            </div>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+
+            <!-- Upcoming Events -->
+            <div class="col-md-6">
+                <div class="card">
+                    <div class="card-header d-flex justify-content-between align-items-center">
+                        <h5 class="mb-0">⏰ Upcoming Events</h5>
+                        <span class="badge badge-success">{{ upcoming_events.count }}</span>
+                    </div>
+                    <div class="card-body">
+                        {% if upcoming_events %}
+                            <div class="event-list">
+                                {% for event in upcoming_events %}
+                                    <div class="event-item mb-3 p-3 border-left" style="border-left-color: {{ event.category.color }};">
+                                        <div class="d-flex justify-content-between align-items-start">
+                                            <div class="flex-grow-1">
+                                                <h6 class="mb-1">
+                                                    <a href="{% url 'calendar_app:event_detail' event.pk %}" class="text-decoration-none">
+                                                        {{ event.title }}
+                                                    </a>
+                                                </h6>
+                                                <p class="text-muted mb-1">
+                                                    <i class="fas fa-calendar"></i> {{ event.start_datetime|date:"M d, Y" }}
+                                                    <br><i class="fas fa-clock"></i> {{ event.start_datetime|time:"H:i" }}
+                                                    {% if event.location %}
+                                                        <br><i class="fas fa-map-marker-alt"></i> {{ event.location }}
+                                                    {% endif %}
+                                                </p>
+                                                <span class="badge badge-secondary badge-sm">{{ event.category.name }}</span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                {% endfor %}
+                            </div>
+                            <div class="text-center mt-3">
+                                <a href="{% url 'calendar_app:calendar_view' %}" class="btn btn-outline-primary btn-sm">
+                                    View All Events
+                                </a>
+                            </div>
+                        {% else %}
+                            <div class="text-center py-4">
+                                <i class="fas fa-calendar-plus fa-3x text-muted mb-3"></i>
+                                <p class="text-muted">No upcoming events</p>
+                            </div>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Pending Invitations -->
+        {% if pending_invitations %}
+            <div class="row mt-4">
+                <div class="col-12">
+                    <div class="card">
+                        <div class="card-header">
+                            <h5 class="mb-0">📨 Pending Event Invitations</h5>
+                        </div>
+                        <div class="card-body">
+                            <div class="row">
+                                {% for invitation in pending_invitations %}
+                                    <div class="col-md-6 mb-3">
+                                        <div class="card border-warning">
+                                            <div class="card-body">
+                                                <h6 class="card-title">{{ invitation.event.title }}</h6>
+                                                <p class="card-text text-muted">
+                                                    <i class="fas fa-calendar"></i> {{ invitation.event.start_datetime|date:"M d, Y H:i" }}
+                                                    {% if invitation.event.location %}
+                                                        <br><i class="fas fa-map-marker-alt"></i> {{ invitation.event.location }}
+                                                    {% endif %}
+                                                    <br><i class="fas fa-user"></i> Organized by {{ invitation.event.created_by.get_full_name|default:invitation.event.created_by.username }}
+                                                </p>
+                                                <div class="btn-group btn-group-sm">
+                                                    <button class="btn btn-success rsvp-btn"
+                                                            data-event-id="{{ invitation.event.pk }}"
+                                                            data-status="ACCEPTED">
+                                                        <i class="fas fa-check"></i> Accept
+                                                    </button>
+                                                    <button class="btn btn-warning rsvp-btn"
+                                                            data-event-id="{{ invitation.event.pk }}"
+                                                            data-status="TENTATIVE">
+                                                        <i class="fas fa-question"></i> Maybe
+                                                    </button>
+                                                    <button class="btn btn-danger rsvp-btn"
+                                                            data-event-id="{{ invitation.event.pk }}"
+                                                            data-status="DECLINED">
+                                                        <i class="fas fa-times"></i> Decline
+                                                    </button>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                {% endfor %}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        {% endif %}
+
+        <!-- Quick Event Creation -->
+        <div class="row mt-4">
+            <div class="col-md-6">
+                <div class="card">
+                    <div class="card-header">
+                        <h5 class="mb-0">⚡ Quick Event</h5>
+                    </div>
+                    <div class="card-body">
+                        <form id="quick-event-form" hx-post="{% url 'calendar_app:quick_event_create' %}" hx-target="#quick-event-result">
+                            {% csrf_token %}
+                            <div class="form-group">
+                                <input type="text" name="title" class="form-control" placeholder="Event title" required>
+                            </div>
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <div class="form-group">
+                                        <input type="date" name="start_date" class="form-control" value="{{ today|date:'Y-m-d' }}" required>
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="form-group">
+                                        <input type="time" name="start_time" class="form-control" value="09:00" required>
+                                    </div>
+                                </div>
+                            </div>
+                            <button type="submit" class="btn btn-primary btn-block">
+                                <i class="fas fa-plus"></i> Create Quick Event
+                            </button>
+                        </form>
+                        <div id="quick-event-result" class="mt-3"></div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Calendar Management -->
+            <div class="col-md-6">
+                <div class="card">
+                    <div class="card-header d-flex justify-content-between align-items-center">
+                        <h5 class="mb-0">📚 My Calendars</h5>
+                        <a href="{% url 'calendar_app:calendar_management' %}" class="btn btn-sm btn-outline-primary">
+                            Manage
+                        </a>
+                    </div>
+                    <div class="card-body">
+                        {% if user_calendars %}
+                            {% for calendar in user_calendars|slice:":5" %}
+                                <div class="d-flex align-items-center mb-2">
+                                    <div class="calendar-color-indicator mr-2" style="background-color: {{ calendar.color }};"></div>
+                                    <div class="flex-grow-1">
+                                        <strong>{{ calendar.name }}</strong>
+                                        <br><small class="text-muted">{{ calendar.get_calendar_type_display }}</small>
+                                    </div>
+                                    {% if calendar.is_default %}
+                                        <span class="badge badge-primary badge-sm">Default</span>
+                                    {% endif %}
+                                </div>
+                            {% endfor %}
+                            {% if user_calendars.count > 5 %}
+                                <div class="text-center mt-2">
+                                    <a href="{% url 'calendar_app:calendar_management' %}" class="btn btn-sm btn-outline-secondary">
+                                        View All ({{ user_calendars.count }})
+                                    </a>
+                                </div>
+                            {% endif %}
+                        {% else %}
+                            <div class="text-center py-3">
+                                <p class="text-muted">No calendars found</p>
+                                <a href="{% url 'calendar_app:calendar_create' %}" class="btn btn-primary btn-sm">
+                                    Create Calendar
+                                </a>
+                            </div>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+{% endblock %}
+
+{% block extra_js %}
+    <script src="{% static 'js/calendar.js' %}"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // RSVP functionality
+            document.querySelectorAll('.rsvp-btn').forEach(button => {
+                button.addEventListener('click', function() {
+                    const eventId = this.dataset.eventId;
+                    const status = this.dataset.status;
+
+                    fetch(`/calendar/event/${eventId}/rsvp/`, {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/x-www-form-urlencoded',
+                            'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value
+                        },
+                        body: `status=${status}`
+                    })
+                        .then(response => response.json())
+                        .then(data => {
+                            if (data.success) {
+                                // Remove the invitation card
+                                this.closest('.col-md-6').remove();
+
+                                // Show success message
+                                const alert = document.createElement('div');
+                                alert.className = 'alert alert-success alert-dismissible fade show';
+                                alert.innerHTML = `
+                        ${data.message}
+                        <button type="button" class="close" data-dismiss="alert">
+                            <span>&times;</span>
+                        </button>
+                    `;
+                                document.querySelector('.container-fluid').insertBefore(alert, document.querySelector('.row'));
+                            }
+                        });
+                });
+            });
+        });
+    </script>
+{% endblock %}

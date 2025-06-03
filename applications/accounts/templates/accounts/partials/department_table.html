@@ -1,0 +1,42 @@
+{% for department in departments %}
+    <tr>
+        <td>{{ department.name }}</td>
+        <td>{{ department.company.name }} ({{ department.company.get_company_type_display }})</td>
+        <td>{{ department.staff.count }}</td>
+        <td>
+            {% if department.active %}
+                <span class="badge bg-success">Active</span>
+            {% else %}
+                <span class="badge bg-danger">Inactive</span>
+            {% endif %}
+        </td>
+        <td>
+            <div class="btn-group">
+                <button class="btn btn-sm btn-outline-primary"
+                        hx-get="{% url 'accounts:department_detail_partial' department.id %}"
+                        hx-target="#departmentDetailModal .modal-content"
+                        data-bs-toggle="modal"
+                        data-bs-target="#departmentDetailModal">
+                    <i class="fas fa-eye"></i>
+                </button>
+                <a href="{% url 'accounts:department_edit' department.id %}" class="btn btn-sm btn-outline-secondary">
+                    <i class="fas fa-edit"></i>
+                </a>
+                <button class="btn btn-sm btn-outline-{% if department.active %}warning{% else %}success{% endif %}"
+                        hx-post="{% url 'accounts:toggle_department_status' department.id %}"
+                        hx-target="closest tr"
+                        hx-swap="outerHTML">
+                    {% if department.active %}
+                        <i class="fas fa-toggle-off"></i>
+                    {% else %}
+                        <i class="fas fa-toggle-on"></i>
+                    {% endif %}
+                </button>
+            </div>
+        </td>
+    </tr>
+{% empty %}
+    <tr>
+        <td colspan="5" class="text-center py-3">No departments found</td>
+    </tr>
+{% endfor %}

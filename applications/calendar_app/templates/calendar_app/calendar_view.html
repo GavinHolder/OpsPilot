@@ -1,0 +1,139 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Calendar View - OpsPilot{% endblock %}
+
+{% block extra_css %}
+    <link rel="stylesheet" href="{% static 'css/calendar.css' %}">
+{% endblock %}
+
+{% block content %}
+    <div class="container-fluid">
+        <!-- Calendar Header -->
+        <div class="row mb-4">
+            <div class="col-12">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <h1 class="h3 mb-0">📅 Calendar</h1>
+                        <p class="text-muted">{{ view_type|title }} view for {{ current_date|date:"F Y" }}</p>
+                    </div>
+                    <div class="btn-group">
+                        <a href="{% url 'calendar_app:event_create' %}" class="btn btn-primary">
+                            <i class="fas fa-plus"></i> New Event
+                        </a>
+                        <a href="{% url 'calendar_app:calendar_dashboard' %}" class="btn btn-outline-secondary">
+                            <i class="fas fa-tachometer-alt"></i> Dashboard
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Calendar Controls -->
+        <div class="row mb-3">
+            <div class="col-md-6">
+                <div class="btn-group" role="group">
+                    <a href="?view=day&year={{ year }}&month={{ month }}&day={{ day }}"
+                       class="btn {% if view_type == 'day' %}btn-primary{% else %}btn-outline-primary{% endif %}">
+                        Day
+                    </a>
+                    <a href="?view=week&year={{ year }}&month={{ month }}&day={{ day }}"
+                       class="btn {% if view_type == 'week' %}btn-primary{% else %}btn-outline-primary{% endif %}">
+                        Week
+                    </a>
+                    <a href="?view=month&year={{ year }}&month={{ month }}"
+                       class="btn {% if view_type == 'month' %}btn-primary{% else %}btn-outline-primary{% endif %}">
+                        Month
+                    </a>
+                </div>
+            </div>
+            <div class="col-md-6 text-right">
+                <div class="btn-group">
+                    {% if view_type == 'month' %}
+                        <a href="?view=month&year={{ year }}&month={{ month|add:'-1' }}" class="btn btn-outline-secondary">
+                            <i class="fas fa-chevron-left"></i> Previous
+                        </a>
+                        <button class="btn btn-outline-secondary" disabled>
+                            {{ current_date|date:"F Y" }}
+                        </button>
+                        <a href="?view=month&year={{ year }}&month={{ month|add:'1' }}" class="btn btn-outline-secondary">
+                            Next <i class="fas fa-chevron-right"></i>
+                        </a>
+                    {% elif view_type == 'week' %}
+                        <a href="?view=week&year={{ year }}&month={{ month }}&day={{ day|add:'-7' }}" class="btn btn-outline-secondary">
+                            <i class="fas fa-chevron-left"></i> Previous Week
+                        </a>
+                        <button class="btn btn-outline-secondary" disabled>
+                            {{ start_date|date:"M d" }} - {{ end_date|date:"M d, Y" }}
+                        </button>
+                        <a href="?view=week&year={{ year }}&month={{ month }}&day={{ day|add:'7' }}" class="btn btn-outline-secondary">
+                            Next Week <i class="fas fa-chevron-right"></i>
+                        </a>
+                    {% else %}
+                        <a href="?view=day&year={{ year }}&month={{ month }}&day={{ day|add:'-1' }}" class="btn btn-outline-secondary">
+                            <i class="fas fa-chevron-left"></i> Previous Day
+                        </a>
+                        <button class="btn btn-outline-secondary" disabled>
+                            {{ current_date|date:"F d, Y" }}
+                        </button>
+                        <a href="?view=day&year={{ year }}&month={{ month }}&day={{ day|add:'1' }}" class="btn btn-outline-secondary">
+                            Next Day <i class="fas fa-chevron-right"></i>
+                        </a>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+
+        <!-- Calendar Content -->
+        <div class="row">
+            <div class="col-12">
+                <div class="card">
+                    <div class="card-body">
+                        {% if view_type == 'month' %}
+                            {% include 'calendar_app/partials/month_view.html' %}
+                        {% elif view_type == 'week' %}
+                            {% include 'calendar_app/partials/week_view.html' %}
+                        {% else %}
+                            {% include 'calendar_app/partials/day_view.html' %}
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Legend -->
+        <div class="row mt-3">
+            <div class="col-12">
+                <div class="card">
+                    <div class="card-body">
+                        <h6>Legend:</h6>
+                        <div class="row">
+                            <div class="col-md-4">
+                                <div class="d-flex align-items-center mb-2">
+                                    <div class="legend-item bg-primary mr-2"></div>
+                                    <span>Events</span>
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <div class="d-flex align-items-center mb-2">
+                                    <div class="legend-item bg-warning mr-2"></div>
+                                    <span>Task Deadlines</span>
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <div class="d-flex align-items-center mb-2">
+                                    <div class="legend-item bg-success mr-2"></div>
+                                    <span>Scheduled Jobs</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+{% endblock %}
+
+{% block extra_js %}
+    <script src="{% static 'js/calendar.js' %}"></script>
+{% endblock %}

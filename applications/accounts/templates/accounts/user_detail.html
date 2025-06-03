@@ -1,0 +1,127 @@
+{% extends 'base.html' %}
+
+{% block title %}{{ user_obj.get_full_name|default:user_obj.username }} - OpsPilot{% endblock %}
+
+{% block content %}
+    <div class="container my-4">
+        <div class="row">
+            <div class="col-md-4">
+                <div class="card shadow mb-4">
+                    <div class="card-header bg-primary text-white">
+                        <h5 class="mb-0">User Information</h5>
+                    </div>
+                    <div class="card-body text-center">
+                        {% if user_obj.profile.profile_image %}
+                            <img src="{{ user_obj.profile.profile_image.url }}" alt="Profile Image" class="img-fluid rounded-circle mb-3" style="max-width: 150px;">
+                        {% else %}
+                            <div class="bg-light rounded-circle d-inline-flex justify-content-center align-items-center mb-3" style="width: 150px; height: 150px;">
+                                <span class="display-4 text-secondary">{{ user_obj.first_name|first|upper }}{{ user_obj.last_name|first|upper }}</span>
+                            </div>
+                        {% endif %}
+
+                        <h4>{{ user_obj.get_full_name }}</h4>
+                        <p class="text-muted">@{{ user_obj.username }}</p>
+
+                        {% if user.is_staff or user == user_obj %}
+                            <div class="mt-3">
+                                <a href="{% url 'accounts:user_list' %}" class="btn btn-outline-secondary">Back to List</a>
+                                {% if user.is_staff %}
+                                    <button class="btn btn-outline-{% if user_obj.is_active %}warning{% else %}success{% endif %}"
+                                            hx-post="{% url 'accounts:toggle_user_status' user_obj.id %}"
+                                            hx-swap="none"
+                                            hx-target="#user-status-badge"
+                                            hx-trigger="click">
+                                        {% if user_obj.is_active %}Deactivate{% else %}Activate{% endif %}
+                                    </button>
+                                {% endif %}
+                            </div>
+                        {% endif %}
+                    </div>
+                    <ul class="list-group list-group-flush">
+                        <li class="list-group-item">
+                            <strong>Role:</strong> {{ user_obj.profile.get_role_display }}
+                        </li>
+                        <li class="list-group-item">
+                            <strong>Department:</strong> {{ user_obj.profile.department|default:"Not assigned" }}
+                        </li>
+                        <li class="list-group-item">
+                            <strong>Email:</strong> {{ user_obj.email }}
+                        </li>
+                        {% if user_obj.profile.phone_number %}
+                            <li class="list-group-item">
+                                <strong>Phone:</strong> {{ user_obj.profile.phone_number }}
+                            </li>
+                        {% endif %}
+                        <li class="list-group-item">
+                            <strong>Status:</strong>
+                            <span id="user-status-badge" class="badge {% if user_obj.is_active %}bg-success{% else %}bg-danger{% endif %}">
+                            {% if user_obj.is_active %}Active{% else %}Inactive{% endif %}
+                        </span>
+                        </li>
+                        <li class="list-group-item">
+                            <strong>Member since:</strong> {{ user_obj.date_joined|date:"F j, Y" }}
+                        </li>
+                        <li class="list-group-item">
+                            <strong>Last login:</strong> {{ user_obj.last_login|date:"F j, Y H:i"|default:"Never" }}
+                        </li>
+                    </ul>
+                </div>
+            </div>
+
+            <div class="col-md-8">
+                <div class="card shadow mb-4">
+                    <div class="card-header bg-primary text-white">
+                        <h5 class="mb-0">Bio</h5>
+                    </div>
+                    <div class="card-body">
+                        {% if user_obj.profile.bio %}
+                            <p>{{ user_obj.profile.bio|linebreaks }}</p>
+                        {% else %}
+                            <p class="text-muted">No bio information provided.</p>
+                        {% endif %}
+                    </div>
+                </div>
+
+                <div class="card shadow mb-4">
+                    <div class="card-header bg-primary text-white">
+                        <h5 class="mb-0">Skills</h5>
+                    </div>
+                    <div class="card-body">
+                        {% if user_obj.profile.skills.all %}
+                            <div class="row">
+                                {% for skill_assignment in user_obj.profile.skills.all %}
+                                    <div class="col-md-6 mb-2">
+                                        <div class="d-flex justify-content-between align-items-center">
+                                            <span>{{ skill_assignment.skill.name }}</span>
+                                            <span class="badge bg-primary">{{ skill_assignment.get_proficiency_level_display }}</span>
+                                        </div>
+                                        <div class="progress" style="height: 8px;">
+                                            <div class="progress-bar" role="progressbar" style="width: {{ skill_assignment.proficiency_level|multiply:20 }}%;" aria-valuenow="{{ skill_assignment.proficiency_level }}" aria-valuemin="0" aria-valuemax="5"></div>
+                                        </div>
+                                    </div>
+                                {% endfor %}
+                            </div>
+                        {% else %}
+                            <p class="text-muted">No skills added yet.</p>
+                        {% endif %}
+                    </div>
+                </div>
+
+                <div class="card shadow">
+                    <div class="card-header bg-primary text-white">
+                        <h5 class="mb-0">Recent Activity</h5>
+                    </div>
+                    <div class="card-body">
+                        <div id="user-activity" hx-get="{% url 'accounts:user_activity' user_obj.id %}" hx-trigger="load">
+                            <div class="text-center">
+                                <div class="spinner-border text-primary" role="status">
+                                    <span class="visually-hidden">Loading...</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+{% endblock %}

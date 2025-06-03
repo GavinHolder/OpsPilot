@@ -1,0 +1,79 @@
+{% extends 'base.html' %}
+
+{% block title %}{{ title }} - OpsPilot{% endblock %}
+
+{% block content %}
+    <div class="container my-4">
+        <div class="row justify-content-center">
+            <div class="col-md-8">
+                <div class="card shadow">
+                    <div class="card-header bg-primary text-white">
+                        <h4 class="mb-0">{{ title }}</h4>
+                    </div>
+                    <div class="card-body">
+                        <form method="post" action="">
+                            {% csrf_token %}
+
+                            {% if messages %}
+                                <div class="messages mb-3">
+                                    {% for message in messages %}
+                                        <div class="alert alert-{{ message.tags }}">
+                                            {{ message }}
+                                        </div>
+                                    {% endfor %}
+                                </div>
+                            {% endif %}
+
+                            <div class="mb-3">
+                                <label for="id_name">Department Name</label>
+                                {{ form.name }}
+                                {% if form.name.errors %}
+                                    <div class="text-danger">
+                                        {{ form.name.errors }}
+                                    </div>
+                                {% endif %}
+                            </div>
+
+                            <div class="mb-3">
+                                <label for="id_company">Company</label>
+                                {{ form.company }}
+                                {% if form.company.errors %}
+                                    <div class="text-danger">
+                                        {{ form.company.errors }}
+                                    </div>
+                                {% endif %}
+                            </div>
+
+                            <div class="mb-3">
+                                <label for="id_description">Description</label>
+                                {{ form.description }}
+                                {% if form.description.errors %}
+                                    <div class="text-danger">
+                                        {{ form.description.errors }}
+                                    </div>
+                                {% endif %}
+                            </div>
+
+                            <div class="form-check mb-3">
+                                {{ form.active }}
+                                <label class="form-check-label" for="id_active">
+                                    Active
+                                </label>
+                                {% if form.active.errors %}
+                                    <div class="text-danger">
+                                        {{ form.active.errors }}
+                                    </div>
+                                {% endif %}
+                            </div>
+
+                            <div class="d-grid gap-2 d-md-flex justify-content-md-end">
+                                <a href="{% url 'accounts:department_list' %}" class="btn btn-outline-secondary me-md-2">Cancel</a>
+                                <button type="submit" class="btn btn-primary">Save</button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+{% endblock %}
