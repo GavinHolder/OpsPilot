@@ -1,0 +1,12 @@
+<div class="d-flex justify-content-between align-items-center">
+    <div>
+        <span class="status-badge status-{{ task.status }}">{{ task.get_status_display }}</span>
+    </div>
+    <div>
+        {% if task.status == 'completed' and task.completed_at %}
+            <small class="text-muted">
+                Completed on {{ task.completed_at|date:"F j, Y, g:i a" }}
+            </small>
+        {% endif %}
+    </div>
+</div>

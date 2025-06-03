@@ -1,0 +1,260 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Title</title>
+</head>
+<body>
+
+</body>
+</html>{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Task Board | OpsPilot{% endblock %}
+
+{% block tasks_active %}active{% endblock %}
+
+{% block extra_css %}
+<style>
+    .board-container {
+        overflow-x: auto;
+        padding-bottom: 20px;
+    }
+    .task-board {
+        display: flex;
+        gap: 20px;
+        min-height: 600px;
+    }
+    .board-column {
+        min-width: 300px;
+        width: 300px;
+        background-color: #f8f9fa;
+        border-radius: 8px;
+        padding: 10px;
+    }
+    .column-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 10px;
+        border-bottom: 1px solid #dee2e6;
+        margin-bottom: 10px;
+    }
+    .column-title {
+        font-weight: 600;
+        font-size: 1.1rem;
+        margin: 0;
+    }
+    .column-count {
+        display: inline-block;
+        padding: 0.25rem 0.5rem;
+        border-radius: 50%;
+        background-color: #e9ecef;
+        font-size: 0.8rem;
+    }
+    .task-card {
+        background-color: white;
+        border-radius: 8px;
+        padding: 10px;
+        margin-bottom: 10px;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+        cursor: pointer;
+        transition: transform 0.2s;
+        position: relative;
+    }
+    .task-card:hover {
+        transform: translateY(-3px);
+        box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+    }
+    .task-title {
+        font-weight: 600;
+        margin-bottom: 5px;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+    }
+    .task-meta {
+        font-size: 0.8rem;
+        color: #6c757d;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+    }
+    .priority-indicator {
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 4px;
+        height: 100%;
+        border-top-left-radius: 8px;
+        border-bottom-left-radius: 8px;
+    }
+    .priority-high {
+        background-color: #dc3545;
+    }
+    .priority-medium {
+        background-color: #fd7e14;
+    }
+    .priority-low {
+        background-color: #28a745;
+    }
+    .company-badge {
+        font-size: 0.7rem;
+        padding: 0.1rem 0.4rem;
+        border-radius: 10px;
+    }
+    .company-wisp {
+        background-color: #cce5ff;
+        color: #004085;
+    }
+    .company-fno {
+        background-color: #d4edda;
+        color: #155724;
+    }
+    .add-task-btn {
+        width: 100%;
+        text-align: center;
+        padding: 10px;
+        background-color: #e9ecef;
+        border-radius: 8px;
+        margin-bottom: 10px;
+        cursor: pointer;
+        transition: background-color 0.2s;
+    }
+    .add-task-btn:hover {
+        background-color: #dee2e6;
+    }
+    .overdue-indicator {
+        position: absolute;
+        top: 10px;
+        right: 10px;
+        width: 8px;
+        height: 8px;
+        border-radius: 50%;
+        background-color: #dc3545;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h1>Task Board</h1>
+        <div class="d-flex">
+            <div class="btn-group me-2">
+                <a href="{% url 'tasks:task_list' %}" class="btn btn-outline-secondary">
+                    <i class="fas fa-list"></i> List
+                </a>
+                <a href="{% url 'tasks:task_board' %}" class="btn btn-outline-secondary active">
+                    <i class="fas fa-columns"></i> Board
+                </a>
+                <a href="{% url 'tasks:task_calendar' %}" class="btn btn-outline-secondary">
+                    <i class="fas fa-calendar-alt"></i> Calendar
+                </a>
+            </div>
+            <a href="{% url 'tasks:task_create' %}" class="btn btn-primary">
+                <i class="fas fa-plus-circle"></i> New Task
+            </a>
+        </div>
+    </div>
+
+    <div class="board-container">
+        <div class="task-board">
+            <!-- Pending Column -->
+            <div class="board-column">
+                <div class="column-header">
+                    <h2 class="column-title">Pending</h2>
+                    <span class="column-count">{{ pending_tasks.count }}</span>
+                </div>
+
+                <div class="add-task-btn" onclick="location.href='{% url 'tasks:task_create' %}'">
+                    <i class="fas fa-plus"></i> Add Task
+                </div>
+
+                {% for task in pending_tasks %}
+                    <div class="task-card" onclick="location.href='{% url 'tasks:task_detail' task.pk %}'">
+                        <div class="priority-indicator priority-{{ task.priority.name|lower }}"></div>
+                        {% if task.is_overdue %}
+                            <div class="overdue-indicator" title="Overdue"></div>
+                        {% endif %}
+                        <div class="ps-2">
+                            <div class="task-title">{{ task.title }}</div>
+                            <div class="task-meta">
+                                <div>
+                                    {% if task.deadline %}
+                                        <i class="fas fa-calendar-alt"></i> {{ task.deadline|date:"M d" }}
+                                    {% endif %}
+                                </div>
+                                <span class="company-badge company-{{ task.company }}">{{ task.get_company_display }}</span>
+                            </div>
+                        </div>
+                    </div>
+                {% empty %}
+                    <div class="text-center text-muted p-3">
+                        <i class="fas fa-inbox"></i> No pending tasks
+                    </div>
+                {% endfor %}
+            </div>
+
+            <!-- In Progress Column -->
+            <div class="board-column">
+                <div class="column-header">
+                    <h2 class="column-title">In Progress</h2>
+                    <span class="column-count">{{ in_progress_tasks.count }}</span>
+                </div>
+
+                {% for task in in_progress_tasks %}
+                    <div class="task-card" onclick="location.href='{% url 'tasks:task_detail' task.pk %}'">
+                        <div class="priority-indicator priority-{{ task.priority.name|lower }}"></div>
+                        {% if task.is_overdue %}
+                            <div class="overdue-indicator" title="Overdue"></div>
+                        {% endif %}
+                        <div class="ps-2">
+                            <div class="task-title">{{ task.title }}</div>
+                            <div class="task-meta">
+                                <div>
+                                    {% if task.deadline %}
+                                        <i class="fas fa-calendar-alt"></i> {{ task.deadline|date:"M d" }}
+                                    {% endif %}
+                                </div>
+                                <span class="company-badge company-{{ task.company }}">{{ task.get_company_display }}</span>
+                            </div>
+                        </div>
+                    </div>
+                {% empty %}
+                    <div class="text-center text-muted p-3">
+                        <i class="fas fa-spinner"></i> No tasks in progress
+                    </div>
+                {% endfor %}
+            </div>
+
+            <!-- Completed Column -->
+            <div class="board-column">
+                <div class="column-header">
+                    <h2 class="column-title">Completed</h2>
+                    <span class="column-count">{{ completed_tasks.count }}</span>
+                </div>
+
+                {% for task in completed_tasks %}
+                    <div class="task-card" onclick="location.href='{% url 'tasks:task_detail' task.pk %}'">
+                        <div class="priority-indicator priority-{{ task.priority.name|lower }}"></div>
+                        <div class="ps-2">
+                            <div class="task-title">{{ task.title }}</div>
+                            <div class="task-meta">
+                                <div>
+                                    <i class="fas fa-check-circle"></i> {{ task.completed_at|date:"M d" }}
+                                </div>
+                                <span class="company-badge company-{{ task.company }}">{{ task.get_company_display }}</span>
+                            </div>
+                        </div>
+                    </div>
+                {% empty %}
+                    <div class="text-center text-muted p-3">
+                        <i class="fas fa-check-double"></i> No completed tasks
+                    </div>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

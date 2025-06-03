@@ -1,0 +1,797 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}{{ task.title }} | OpsPilot{% endblock %}
+
+{% block tasks_active %}active{% endblock %}
+
+{% block extra_css %}
+    <style>
+        .task-header {
+            padding: 20px;
+            background-color: #f8f9fa;
+            border-radius: 8px;
+            margin-bottom: 20px;
+        }
+
+        .status-badge {
+            font-size: 0.8rem;
+            padding: 0.3rem 0.6rem;
+            border-radius: 15px;
+        }
+
+        .status-pending {
+            background-color: #ffc107;
+            color: #212529;
+        }
+
+        .status-in_progress {
+            background-color: #007bff;
+            color: #ffffff;
+        }
+
+        .status-completed {
+            background-color: #28a745;
+            color: #ffffff;
+        }
+
+        .status-deferred {
+            background-color: #6c757d;
+            color: #ffffff;
+        }
+
+        .status-cancelled {
+            background-color: #dc3545;
+            color: #ffffff;
+        }
+
+        .priority-badge {
+            font-size: 0.8rem;
+            padding: 0.3rem 0.6rem;
+            border-radius: 15px;
+        }
+
+        .deadline-info {
+            font-size: 0.9rem;
+        }
+
+        .overdue {
+            color: #dc3545;
+        }
+
+        .task-section {
+            margin-bottom: 30px;
+        }
+
+        .section-title {
+            margin-bottom: 15px;
+            font-size: 1.2rem;
+            font-weight: 600;
+            color: #343a40;
+            padding-bottom: 8px;
+            border-bottom: 1px solid #dee2e6;
+        }
+
+        .subtask-item {
+            display: flex;
+            align-items: center;
+            padding: 10px;
+            border-radius: 5px;
+            margin-bottom: 8px;
+            background-color: #f8f9fa;
+        }
+
+        .subtask-completed {
+            text-decoration: line-through;
+            color: #6c757d;
+        }
+
+        .subtask-checkbox {
+            margin-right: 10px;
+        }
+
+        .comment-item {
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 15px;
+            background-color: #f8f9fa;
+        }
+
+        .comment-header {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 8px;
+        }
+
+        .comment-author {
+            font-weight: 600;
+        }
+
+        .comment-date {
+            font-size: 0.8rem;
+            color: #6c757d;
+        }
+
+        .attachment-item {
+            display: flex;
+            align-items: center;
+            padding: 10px;
+            border-radius: 5px;
+            margin-bottom: 8px;
+            background-color: #f8f9fa;
+        }
+
+        .attachment-icon {
+            margin-right: 10px;
+            font-size: 1.2rem;
+        }
+
+        .attachment-info {
+            flex-grow: 1;
+        }
+
+        .attachment-name {
+            font-weight: 600;
+        }
+
+        .attachment-meta {
+            font-size: 0.8rem;
+            color: #6c757d;
+        }
+
+        .task-tags-container {
+            margin-top: 15px;
+        }
+
+        .task-tag {
+            display: inline-block;
+            padding: 0.3rem 0.6rem;
+            border-radius: 15px;
+            background-color: #e9ecef;
+            margin-right: 5px;
+            margin-bottom: 5px;
+            font-size: 0.8rem;
+        }
+
+        .company-badge {
+            font-size: 0.8rem;
+            padding: 0.3rem 0.6rem;
+            border-radius: 15px;
+            margin-left: 5px;
+        }
+
+        .company-wisp {
+            background-color: #cce5ff;
+            color: #004085;
+        }
+
+        .company-fno {
+            background-color: #d4edda;
+            color: #155724;
+        }
+
+        .voice-note-item {
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 15px;
+            background-color: #f8f9fa;
+        }
+
+        .voice-note-header {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 8px;
+        }
+
+        .voice-note-author {
+            font-weight: 600;
+        }
+
+        .voice-note-date {
+            font-size: 0.8rem;
+            color: #6c757d;
+        }
+
+        .voice-note-player {
+            width: 100%;
+        }
+
+        .voice-note-transcription {
+            margin-top: 10px;
+            padding: 10px;
+            background-color: #ffffff;
+            border-radius: 5px;
+            border: 1px solid #dee2e6;
+        }
+    </style>
+{% endblock %}
+
+{% block content %}
+    <div class="container-fluid">
+        <div class="row">
+            <div class="col-lg-12">
+                <!-- Breadcrumb -->
+                <nav aria-label="breadcrumb" class="mb-4">
+                    <ol class="breadcrumb">
+                        <li class="breadcrumb-item"><a href="{% url 'dashboard:index' %}">Dashboard</a></li>
+                        <li class="breadcrumb-item"><a href="{% url 'tasks:task_list' %}">Tasks</a></li>
+                        <li class="breadcrumb-item active" aria-current="page">{{ task.title }}</li>
+                    </ol>
+                </nav>
+
+                <!-- Task Header -->
+                <div class="task-header">
+                    <div class="d-flex justify-content-between align-items-start">
+                        <div>
+                            <h2 class="mb-2">{{ task.title }}</h2>
+                            <div class="d-flex align-items-center mb-3">
+                                <span class="status-badge status-{{ task.status }}">{{ task.get_status_display }}</span>
+                                {% if task.priority %}
+                                    <span class="priority-badge ms-2"
+                                          style="background-color: {{ task.priority.color }}; color: white;">
+                                    {{ task.priority.name }}
+                                </span>
+                                {% endif %}
+                                <span class="company-badge company-{{ task.company }}">{{ task.get_company_display }}</span>
+                            </div>
+
+                            <div class="deadline-info">
+                                {% if task.deadline %}
+                                    <i class="fas fa-calendar-alt"></i> Deadline:
+                                    {{ task.deadline|date:"F j, Y, g:i a" }}
+                                    {% if task.is_overdue %}
+                                        <span class="overdue">(Overdue by {{ task.days_until_deadline|abs }} days)</span>
+                                    {% else %}
+                                        ({{ task.days_until_deadline }} days remaining)
+                                    {% endif %}
+                                {% else %}
+                                    <i class="fas fa-calendar-times"></i> No deadline set
+                                {% endif %}
+                            </div>
+
+                            <div class="mt-2 text-muted">
+                                <small>Created {{ task.created_at|date:"F j, Y" }}
+                                    by {{ task.created_by.get_full_name|default:task.created_by.username }}</small>
+                                <br>
+                                <small>
+                                    {% if task.assigned_to %}
+                                        Assigned to
+                                        {{ task.assigned_to.get_full_name|default:task.assigned_to.username }}
+                                    {% else %}
+                                        Not assigned
+                                    {% endif %}
+                                </small>
+                            </div>
+
+                            {% if task.get_tags_list %}
+                                <div class="task-tags-container">
+                                    {% for tag in task.get_tags_list %}
+                                        <span class="task-tag">{{ tag }}</span>
+                                    {% endfor %}
+                                </div>
+                            {% endif %}
+                        </div>
+
+                        <div>
+                            <div class="btn-group">
+                                <a href="{% url 'tasks:task_update' task.pk %}" class="btn btn-outline-primary">
+                                    <i class="fas fa-edit"></i> Edit
+                                </a>
+                                <button type="button" class="btn btn-outline-success"
+                                        hx-post="{% url 'tasks:mark_completed' task.pk %}"
+                                        hx-target="#task-status-container"
+                                        {% if task.status == 'completed' %}disabled{% endif %}>
+                                    <i class="fas fa-check"></i> Complete
+                                </button>
+                                <button type="button" class="btn btn-outline-danger" data-bs-toggle="modal"
+                                        data-bs-target="#deleteTaskModal">
+                                    <i class="fas fa-trash-alt"></i> Delete
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="row">
+                    <!-- Left Column -->
+                    <div class="col-lg-8">
+                        <!-- Task Description -->
+                        <div class="task-section">
+                            <h3 class="section-title">Description</h3>
+                            <div class="card">
+                                <div class="card-body">
+                                    {% if task.description %}
+                                        <p>{{ task.description|linebreaks }}</p>
+                                    {% else %}
+                                        <p class="text-muted">No description provided.</p>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Subtasks -->
+                        <div class="task-section">
+                            <h3 class="section-title">Subtasks</h3>
+                            <div class="card">
+                                <div class="card-body">
+                                    <div id="subtasks-container">
+                                        {% if subtasks %}
+                                            {% for subtask in subtasks %}
+                                                <div class="subtask-item {% if subtask.is_completed %}subtask-completed{% endif %}">
+                                                    <div class="form-check">
+                                                        <input class="form-check-input subtask-checkbox" type="checkbox"
+                                                               {% if subtask.is_completed %}checked{% endif %}
+                                                               hx-post="{% url 'tasks:toggle_subtask' subtask.pk %}"
+                                                               hx-swap="outerHTML"
+                                                               hx-target="closest .subtask-item">
+                                                        <label class="form-check-label">
+                                                            {{ subtask.description }}
+                                                        </label>
+                                                    </div>
+                                                    {% if subtask.completed_at %}
+                                                        <span class="ms-auto text-muted small">
+                                                        Completed {{ subtask.completed_at|date:"M d, Y" }}
+                                                    </span>
+                                                    {% endif %}
+                                                </div>
+                                            {% endfor %}
+                                        {% else %}
+                                            <p class="text-muted">No subtasks added yet.</p>
+                                        {% endif %}
+                                    </div>
+
+                                    <hr>
+
+                                    <!-- Add Subtask Form -->
+                                    <form hx-post="{% url 'tasks:add_subtask' task.pk %}"
+                                          hx-target="#subtasks-container"
+                                          hx-swap="beforeend"
+                                          class="mt-3">
+                                        {% csrf_token %}
+                                        <div class="input-group">
+                                            <input type="text" name="description" class="form-control"
+                                                   placeholder="Add a subtask..." required>
+                                            <button type="submit" class="btn btn-primary">Add</button>
+                                        </div>
+                                    </form>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Comments -->
+                        <div class="task-section">
+                            <h3 class="section-title">Comments</h3>
+                            <div class="card">
+                                <div class="card-body">
+                                    <div id="comments-container">
+                                        {% if comments %}
+                                            {% for comment in comments %}
+                                                <div class="comment-item">
+                                                    <div class="comment-header">
+                                                        <span class="comment-author">{{ comment.author.get_full_name|default:comment.author.username }}</span>
+                                                        <span class="comment-date">{{ comment.created_at|date:"M d, Y, g:i a" }}</span>
+                                                    </div>
+                                                    <div class="comment-content">
+                                                        {{ comment.content|linebreaks }}
+                                                    </div>
+                                                </div>
+                                            {% endfor %}
+                                        {% else %}
+                                            <p class="text-muted">No comments yet.</p>
+                                        {% endif %}
+                                    </div>
+
+                                    <hr>
+
+                                    <!-- Add Comment Form -->
+                                    <form hx-post="{% url 'tasks:add_comment' task.pk %}"
+                                          hx-target="#comments-container"
+                                          hx-swap="beforeend"
+                                          class="mt-3">
+                                        {% csrf_token %}
+                                        <div class="mb-3">
+                                            <textarea name="content" class="form-control" rows="3"
+                                                      placeholder="Add a comment..." required></textarea>
+                                        </div>
+                                        <button type="submit" class="btn btn-primary">Post Comment</button>
+                                    </form>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Right Column -->
+                    <div class="col-lg-4">
+                        <!-- Task Status -->
+                        <div class="task-section">
+                            <h3 class="section-title">Status</h3>
+                            <div class="card">
+                                <div class="card-body" id="task-status-container">
+                                    <div class="d-flex justify-content-between align-items-center">
+                                        <div>
+                                            <span class="status-badge status-{{ task.status }}">{{ task.get_status_display }}</span>
+                                        </div>
+                                        <div>
+                                            {% if task.status == 'completed' and task.completed_at %}
+                                                <small class="text-muted">
+                                                    Completed on {{ task.completed_at|date:"F j, Y, g:i a" }}
+                                                </small>
+                                            {% endif %}
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Related Items -->
+                        <div class="task-section">
+                            <h3 class="section-title">Related Items</h3>
+                            <div class="card">
+                                <div class="card-body">
+                                    <ul class="list-group list-group-flush">
+                                        {% if task.related_job %}
+                                            <li class="list-group-item">
+                                                <i class="fas fa-briefcase me-2"></i> Job: {{ task.related_job }}
+                                            </li>
+                                        {% endif %}
+
+                                        {% if task.related_tower %}
+                                            <li class="list-group-item">
+                                                <i class="fas fa-broadcast-tower me-2"></i>
+                                                Tower: {{ task.related_tower }}
+                                            </li>
+                                        {% endif %}
+
+                                        {% if not task.related_job and not task.related_tower %}
+                                            <li class="list-group-item text-muted">
+                                                No related items linked to this task.
+                                            </li>
+                                        {% endif %}
+                                    </ul>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Attachments -->
+                        <div class="task-section">
+                            <h3 class="section-title">Attachments</h3>
+                            <div class="card">
+                                <div class="card-body">
+                                    <div id="attachments-container">
+                                        {% if attachments %}
+                                            {% for attachment in attachments %}
+                                                <div class="attachment-item">
+                                                    <div class="attachment-icon">
+                                                        <i class="fas fa-file"></i>
+                                                    </div>
+                                                    <div class="attachment-info">
+                                                        <div class="attachment-name">
+                                                            <a href="{{ attachment.file.url }}"
+                                                               target="_blank">{{ attachment.file_name }}</a>
+                                                        </div>
+                                                        <div class="attachment-meta">
+                                                            {{ attachment.file_size|filesizeformat }} •
+                                                            Uploaded {{ attachment.uploaded_at|date:"M d, Y" }} by
+                                                            {{ attachment.uploaded_by.get_full_name|default:attachment.uploaded_by.username }}
+                                                        </div>
+                                                    </div>
+                                                    <a href="{{ attachment.file.url }}"
+                                                       class="btn btn-sm btn-outline-primary ms-2" download>
+                                                        <i class="fas fa-download"></i>
+                                                    </a>
+                                                </div>
+                                            {% endfor %}
+                                        {% else %}
+                                            <p class="text-muted">No attachments added yet.</p>
+                                        {% endif %}
+                                    </div>
+
+                                    <hr>
+
+                                    <!-- Add Attachment Form -->
+                                    <form hx-post="{% url 'tasks:add_attachment' task.pk %}"
+                                          hx-target="#attachments-container"
+                                          hx-swap="beforeend"
+                                          hx-encoding="multipart/form-data"
+                                          class="mt-3">
+                                        {% csrf_token %}
+                                        <div class="input-group">
+                                            <input type="file" name="file" class="form-control" required>
+                                            <button type="submit" class="btn btn-primary">Upload</button>
+                                        </div>
+                                    </form>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Voice Notes -->
+                        <div class="task-section">
+                            <h3 class="section-title">Voice Notes</h3>
+                            <div class="card">
+                                <div class="card-body">
+                                    <div id="voice-notes-container">
+                                        {% if voice_notes %}
+                                            {% for voice_note in voice_notes %}
+                                                <div class="voice-note-item">
+                                                    <div class="voice-note-header">
+                                                    <span class="voice-note-author">
+                                                        {{ voice_note.recorded_by.get_full_name|default:voice_note.recorded_by.username }}
+                                                    </span>
+                                                        <span class="voice-note-date">
+                                                        {{ voice_note.recorded_at|date:"M d, Y, g:i a" }}
+                                                    </span>
+                                                    </div>
+                                                    <div class="voice-note-player">
+                                                        <audio controls class="w-100">
+                                                            <source src="{{ voice_note.audio_file.url }}"
+                                                                    type="audio/mpeg">
+                                                            Your browser does not support the audio element.
+                                                        </audio>
+                                                    </div>
+                                                    {% if voice_note.transcription %}
+                                                        <div class="voice-note-transcription">
+                                                            <small class="text-muted">Transcription:</small>
+                                                            <p class="mb-0">{{ voice_note.transcription }}</p>
+                                                        </div>
+                                                    {% endif %}
+                                                </div>
+                                            {% endfor %}
+                                        {% else %}
+                                            <p class="text-muted">No voice notes added yet.</p>
+                                        {% endif %}
+                                    </div>
+
+                                    <hr>
+
+                                    <!-- Record Voice Note Button -->
+                                    <button type="button" class="btn btn-primary w-100" data-bs-toggle="modal"
+                                            data-bs-target="#recordVoiceNoteModal">
+                                        <i class="fas fa-microphone"></i> Record Voice Note
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Delete Task Modal -->
+    <div class="modal fade" id="deleteTaskModal" tabindex="-1" aria-labelledby="deleteTaskModalLabel"
+         aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="deleteTaskModalLabel">Confirm Delete</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <p>Are you sure you want to delete this task?</p>
+                    <p class="text-danger"><strong>This action cannot be undone.</strong></p>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <form action="{% url 'tasks:task_delete' task.pk %}" method="post">
+                        {% csrf_token %}
+                        <button type="submit" class="btn btn-danger">Delete Task</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Record Voice Note Modal -->
+    <div class="modal fade" id="recordVoiceNoteModal" tabindex="-1" aria-labelledby="recordVoiceNoteModalLabel"
+         aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="recordVoiceNoteModalLabel">Record Voice Note</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <!-- Voice Recorder Interface -->
+                    <div id="recorder-interface">
+                        <div class="text-center mb-3">
+                            <button id="start-recording" class="btn btn-primary btn-lg rounded-circle">
+                                <i class="fas fa-microphone"></i>
+                            </button>
+                            <div id="recording-timer" class="mt-2 text-danger" style="display: none;">
+                                Recording: <span id="recording-time">00:00</span>
+                            </div>
+                        </div>
+
+                        <div id="recording-controls" style="display: none;">
+                            <div class="d-flex justify-content-center mb-3">
+                                <button id="stop-recording" class="btn btn-danger me-2">
+                                    <i class="fas fa-stop"></i> Stop
+                                </button>
+                                <button id="cancel-recording" class="btn btn-secondary">
+                                    <i class="fas fa-times"></i> Cancel
+                                </button>
+                            </div>
+
+                            <div class="progress">
+                                <div id="recording-progress"
+                                     class="progress-bar progress-bar-striped progress-bar-animated" role="progressbar"
+                                     style="width: 0%"></div>
+                            </div>
+                        </div>
+
+                        <div id="recording-result" style="display: none;">
+                            <div class="mb-3">
+                                <audio id="recording-audio" controls class="w-100">
+                                    Your browser does not support the audio element.
+                                </audio>
+                            </div>
+
+                            <div class="d-flex justify-content-center">
+                                <button id="save-recording" class="btn btn-success me-2">
+                                    <i class="fas fa-save"></i> Save
+                                </button>
+                                <button id="redo-recording" class="btn btn-secondary">
+                                    <i class="fas fa-redo"></i> Redo
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Upload Form (Hidden, used for submitting the recorded audio) -->
+                    <form id="voice-note-form" hx-post="{% url 'tasks:add_voice_note' task.pk %}"
+                          hx-target="#voice-notes-container"
+                          hx-swap="beforeend"
+                          hx-encoding="multipart/form-data"
+                          style="display: none;">
+                        {% csrf_token %}
+                        <input type="file" name="audio_file" id="voice-note-file">
+                        <input type="hidden" name="duration" id="voice-note-duration" value="0">
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+{% endblock %}
+
+{% block extra_js %}
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            // Voice Recording Functionality
+            const startRecordingBtn = document.getElementById('start-recording');
+            const stopRecordingBtn = document.getElementById('stop-recording');
+            const cancelRecordingBtn = document.getElementById('cancel-recording');
+            const saveRecordingBtn = document.getElementById('save-recording');
+            const redoRecordingBtn = document.getElementById('redo-recording');
+            const recordingTimer = document.getElementById('recording-timer');
+            const recordingTimeDisplay = document.getElementById('recording-time');
+            const recordingControls = document.getElementById('recording-controls');
+            const recordingResult = document.getElementById('recording-result');
+            const recordingProgress = document.getElementById('recording-progress');
+            const recordingAudio = document.getElementById('recording-audio');
+            const voiceNoteForm = document.getElementById('voice-note-form');
+            const voiceNoteFile = document.getElementById('voice-note-file');
+            const voiceNoteDuration = document.getElementById('voice-note-duration');
+
+            let mediaRecorder;
+            let audioChunks = [];
+            let recordingTime = 0;
+            let recordingInterval;
+
+            // Start recording
+            startRecordingBtn.addEventListener('click', function () {
+                navigator.mediaDevices.getUserMedia({audio: true})
+                    .then(stream => {
+                        mediaRecorder = new MediaRecorder(stream);
+                        audioChunks = [];
+
+                        mediaRecorder.addEventListener('dataavailable', event => {
+                            audioChunks.push(event.data);
+                        });
+
+                        mediaRecorder.addEventListener('stop', () => {
+                            const audioBlob = new Blob(audioChunks, {type: 'audio/mp3'});
+                            const audioUrl = URL.createObjectURL(audioBlob);
+                            recordingAudio.src = audioUrl;
+
+                            // Create a file from the blob for submission
+                            const audioFile = new File([audioBlob], 'voice-note.mp3', {type: 'audio/mp3'});
+                            const dataTransfer = new DataTransfer();
+                            dataTransfer.items.add(audioFile);
+                            voiceNoteFile.files = dataTransfer.files;
+
+                            // Set the duration
+                            voiceNoteDuration.value = recordingTime;
+                        });
+
+                        // Start recording
+                        mediaRecorder.start();
+
+                        // Start timer
+                        recordingTime = 0;
+                        recordingTimeDisplay.textContent = '00:00';
+                        recordingInterval = setInterval(() => {
+                            recordingTime++;
+                            const minutes = Math.floor(recordingTime / 60).toString().padStart(2, '0');
+                            const seconds = (recordingTime % 60).toString().padStart(2, '0');
+                            recordingTimeDisplay.textContent = `${minutes}:${seconds}`;
+
+                            // Update progress bar (max 3 minutes = 180 seconds)
+                            const progress = (recordingTime / 180) * 100;
+                            recordingProgress.style.width = `${Math.min(progress, 100)}%`;
+
+                            // Auto-stop at 3 minutes
+                            if (recordingTime >= 180) {
+                                stopRecording();
+                            }
+                        }, 1000);
+
+                        // Show recording UI
+                        startRecordingBtn.style.display = 'none';
+                        recordingTimer.style.display = 'block';
+                        recordingControls.style.display = 'block';
+                    })
+                    .catch(error => {
+                        console.error('Error accessing microphone:', error);
+                        alert('Could not access your microphone. Please check your browser permissions.');
+                    });
+            });
+
+            // Stop recording
+            stopRecordingBtn.addEventListener('click', stopRecording);
+
+            function stopRecording() {
+                if (mediaRecorder && mediaRecorder.state !== 'inactive') {
+                    mediaRecorder.stop();
+                    clearInterval(recordingInterval);
+
+                    // Stop all tracks in the stream
+                    mediaRecorder.stream.getTracks().forEach(track => track.stop());
+
+                    // Show result UI
+                    recordingTimer.style.display = 'none';
+                    recordingControls.style.display = 'none';
+                    recordingResult.style.display = 'block';
+                }
+            }
+
+            // Cancel recording
+            cancelRecordingBtn.addEventListener('click', function () {
+                if (mediaRecorder && mediaRecorder.state !== 'inactive') {
+                    mediaRecorder.stop();
+                    clearInterval(recordingInterval);
+
+                    // Stop all tracks in the stream
+                    mediaRecorder.stream.getTracks().forEach(track => track.stop());
+                }
+
+                // Reset UI
+                resetRecordingUI();
+            });
+
+            // Redo recording
+            redoRecordingBtn.addEventListener('click', function () {
+                resetRecordingUI();
+            });
+
+            // Save recording
+            saveRecordingBtn.addEventListener('click', function () {
+                voiceNoteForm.submit();
+
+                // Close modal after submission
+                const modal = bootstrap.Modal.getInstance(document.getElementById('recordVoiceNoteModal'));
+                modal.hide();
+
+                // Reset UI for next recording
+                setTimeout(resetRecordingUI, 500);
+            });
+
+            function resetRecordingUI() {
+                startRecordingBtn.style.display = 'block';
+                recordingTimer.style.display = 'none';
+                recordingControls.style.display = 'none';
+                recordingResult.style.display = 'none';
+                recordingProgress.style.width = '0%';
+            }
+        });
+    </script>
+{% endblock %}

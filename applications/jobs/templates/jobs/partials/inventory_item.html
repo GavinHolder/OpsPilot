@@ -1,0 +1,24 @@
+<div class="inventory-item">
+    <div class="inventory-header">
+        <span class="inventory-name">{{ usage.quantity }} x {{ usage.item_name }}</span>
+        <span class="inventory-date">{{ usage.used_at|date:"M d, Y" }}</span>
+    </div>
+    <div class="inventory-details">
+        <p class="mb-1">
+            {% if usage.unit_cost %}
+                Unit Cost: R{{ usage.unit_cost }} | Total: R{{ usage.get_total_cost }}
+            {% endif %}
+        </p>
+        <p class="mb-0 text-muted">
+            Company: {{ usage.get_company_display }}
+            {% if usage.used_by %}
+                | Used by: {{ usage.used_by.get_full_name|default:usage.used_by.username }}
+            {% endif %}
+        </p>
+        {% if usage.notes %}
+            <div class="mt-2">
+                <small class="text-muted">{{ usage.notes }}</small>
+            </div>
+        {% endif %}
+    </div>
+</div>

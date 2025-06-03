@@ -1,0 +1,114 @@
+[
+  {
+    "model": "tasks.taskpriority",
+    "pk": 1,
+    "fields": {
+      "name": "Low",
+      "value": 1,
+      "color": "#28a745",
+      "icon": "fa-flag"
+    }
+  },
+  {
+    "model": "tasks.taskpriority",
+    "pk": 2,
+    "fields": {
+      "name": "Medium",
+      "value": 2,
+      "color": "#fd7e14",
+      "icon": "fa-flag"
+    }
+  },
+  {
+    "model": "tasks.taskpriority",
+    "pk": 3,
+    "fields": {
+      "name": "High",
+      "value": 3,
+      "color": "#dc3545",
+      "icon": "fa-flag"
+    }
+  },
+  {
+    "model": "tasks.taskpriority",
+    "pk": 4,
+    "fields": {
+      "name": "Urgent",
+      "value": 4,
+      "color": "#721c24",
+      "icon": "fa-exclamation-triangle"
+    }
+  },
+  {
+    "model": "tasks.taskcategory",
+    "pk": 1,
+    "fields": {
+      "name": "WISP Operations",
+      "color": "#007bff",
+      "icon": "fa-wifi"
+    }
+  },
+  {
+    "model": "tasks.taskcategory",
+    "pk": 2,
+    "fields": {
+      "name": "FNO Operations",
+      "color": "#17a2b8",
+      "icon": "fa-network-wired"
+    }
+  },
+  {
+    "model": "tasks.taskcategory",
+    "pk": 3,
+    "fields": {
+      "name": "Tower Maintenance",
+      "color": "#6f42c1",
+      "icon": "fa-broadcast-tower"
+    }
+  },
+  {
+    "model": "tasks.taskcategory",
+    "pk": 4,
+    "fields": {
+      "name": "Fiber Installation",
+      "color": "#20c997",
+      "icon": "fa-route"
+    }
+  },
+  {
+    "model": "tasks.taskcategory",
+    "pk": 5,
+    "fields": {
+      "name": "Civil Work",
+      "color": "#fd7e14",
+      "icon": "fa-hard-hat"
+    }
+  },
+  {
+    "model": "tasks.taskcategory",
+    "pk": 6,
+    "fields": {
+      "name": "Stock Management",
+      "color": "#6c757d",
+      "icon": "fa-boxes"
+    }
+  },
+  {
+    "model": "tasks.taskcategory",
+    "pk": 7,
+    "fields": {
+      "name": "Meeting",
+      "color": "#28a745",
+      "icon": "fa-users"
+    }
+  },
+  {
+    "model": "tasks.taskcategory",
+    "pk": 8,
+    "fields": {
+      "name": "Admin",
+      "color": "#343a40",
+      "icon": "fa-clipboard-list"
+    }
+  }
+]

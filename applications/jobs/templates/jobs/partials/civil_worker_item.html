@@ -1,0 +1,48 @@
+<div class="civil-worker-item">
+    <div class="d-flex justify-content-between align-items-start mb-2">
+        <h6 class="mb-0">{{ assignment.worker.get_full_name }}</h6>
+        <span class="worker-status {% if assignment.is_active %}worker-active{% else %}worker-inactive{% endif %}">
+            {% if assignment.is_active %}Active{% else %}Inactive{% endif %}
+        </span>
+    </div>
+    <div class="row">
+        <div class="col-md-6">
+            <p class="mb-1 small">
+                <i class="fas fa-calendar-alt"></i> Start: {{ assignment.start_date|date:"M d, Y" }}
+            </p>
+        </div>
+        <div class="col-md-6">
+            <p class="mb-1 small">
+                <i class="fas fa-calendar-check"></i> End:
+                {% if assignment.end_date %}
+                    {{ assignment.end_date|date:"M d, Y" }}
+                {% else %}
+                    <span class="text-muted">Not set</span>
+                {% endif %}
+            </p>
+        </div>
+    </div>
+    <p class="mb-1 small">
+        <i class="fas fa-money-bill-wave"></i> Daily Rate: R{{ assignment.daily_rate }}
+    </p>
+    <p class="mb-1 small">
+        <i class="fas fa-calendar-day"></i> Days Worked: {{ assignment.get_days_worked }}
+        (Total: R{{ assignment.get_total_cost }})
+    </p>
+    {% if assignment.notes %}
+        <p class="mb-0 small text-muted">
+            {{ assignment.notes }}
+        </p>
+    {% endif %}
+
+    {% if assignment.is_active %}
+        <div class="text-end mt-2">
+            <button class="btn btn-sm btn-outline-secondary"
+                    hx-post="{% url 'jobs:end_civil_assignment' assignment.pk %}"
+                    hx-target="closest .civil-worker-item"
+                    hx-swap="outerHTML">
+                End Assignment
+            </button>
+        </div>
+    {% endif %}
+</div>

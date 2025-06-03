@@ -1,0 +1,809 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}{{ job.title }} | OpsPilot{% endblock %}
+
+{% block jobs_active %}active{% endblock %}
+
+{% block extra_css %}
+<style>
+    .job-header {
+        padding: 20px;
+        background-color: #f8f9fa;
+        border-radius: 8px;
+        margin-bottom: 20px;
+    }
+    .status-badge {
+        font-size: 0.8rem;
+        padding: 0.3rem 0.6rem;
+        border-radius: 15px;
+    }
+    .status-pending {
+        background-color: #ffc107;
+        color: #212529;
+    }
+    .status-scheduled {
+        background-color: #17a2b8;
+        color: #ffffff;
+    }
+    .status-in_progress {
+        background-color: #007bff;
+        color: #ffffff;
+    }
+    .status-on_hold {
+        background-color: #6c757d;
+        color: #ffffff;
+    }
+    .status-completed {
+        background-color: #28a745;
+        color: #ffffff;
+    }
+    .status-cancelled {
+        background-color: #dc3545;
+        color: #ffffff;
+    }
+    .priority-badge {
+        font-size: 0.8rem;
+        padding: 0.3rem 0.6rem;
+        border-radius: 15px;
+    }
+    .job-type-badge {
+        font-size: 0.8rem;
+        padding: 0.3rem 0.6rem;
+        border-radius: 15px;
+    }
+    .schedule-info {
+        font-size: 0.9rem;
+    }
+    .overdue {
+        color: #dc3545;
+    }
+    .job-section {
+        margin-bottom: 30px;
+    }
+    .section-title {
+        margin-bottom: 15px;
+        font-size: 1.2rem;
+        font-weight: 600;
+        color: #343a40;
+        padding-bottom: 8px;
+        border-bottom: 1px solid #dee2e6;
+    }
+    .task-item {
+        display: flex;
+        align-items: center;
+        padding: 10px;
+        border-radius: 5px;
+        margin-bottom: 8px;
+        background-color: #f8f9fa;
+    }
+    .task-completed {
+        text-decoration: line-through;
+        color: #6c757d;
+    }
+    .task-checkbox {
+        margin-right: 10px;
+    }
+    .note-item {
+        padding: 15px;
+        border-radius: 8px;
+        margin-bottom: 15px;
+        background-color: #f8f9fa;
+    }
+    .note-header {
+        display: flex;
+        justify-content: space-between;
+        margin-bottom: 8px;
+    }
+    .note-author {
+        font-weight: 600;
+    }
+    .note-date {
+        font-size: 0.8rem;
+        color: #6c757d;
+    }
+    .attachment-item {
+        display: flex;
+        align-items: center;
+        padding: 10px;
+        border-radius: 5px;
+        margin-bottom: 8px;
+        background-color: #f8f9fa;
+    }
+    .attachment-icon {
+        margin-right: 10px;
+        font-size: 1.2rem;
+    }
+    .attachment-info {
+        flex-grow: 1;
+    }
+    .attachment-name {
+        font-weight: 600;
+    }
+    .attachment-meta {
+        font-size: 0.8rem;
+        color: #6c757d;
+    }
+    .job-tags-container {
+        margin-top: 15px;
+    }
+    .job-tag {
+        display: inline-block;
+        padding: 0.3rem 0.6rem;
+        border-radius: 15px;
+        background-color: #e9ecef;
+        margin-right: 5px;
+        margin-bottom: 5px;
+        font-size: 0.8rem;
+    }
+    .civil-worker-item {
+        padding: 15px;
+        border-radius: 8px;
+        margin-bottom: 15px;
+        background-color: #f8f9fa;
+    }
+    .worker-status {
+        font-size: 0.8rem;
+        padding: 0.2rem 0.4rem;
+        border-radius: 10px;
+    }
+    .worker-active {
+        background-color: #28a745;
+        color: #fff;
+    }
+    .worker-inactive {
+        background-color: #6c757d;
+        color: #fff;
+    }
+    .inventory-item {
+        padding: 15px;
+        border-radius: 8px;
+        margin-bottom: 15px;
+        background-color: #f8f9fa;
+    }
+    .inventory-header {
+        display: flex;
+        justify-content: space-between;
+        margin-bottom: 8px;
+    }
+    .inventory-name {
+        font-weight: 600;
+    }
+    .inventory-date {
+        font-size: 0.8rem;
+        color: #6c757d;
+    }
+    .progress {
+        height: 0.5rem;
+    }
+    .status-update-item {
+        padding: 10px;
+        border-radius: 5px;
+        margin-bottom: 8px;
+        background-color: #f8f9fa;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-lg-12">
+            <!-- Breadcrumb -->
+            <nav aria-label="breadcrumb" class="mb-4">
+                <ol class="breadcrumb">
+                    <li class="breadcrumb-item"><a href="{% url 'dashboard:index' %}">Dashboard</a></li>
+                    <li class="breadcrumb-item"><a href="{% url 'jobs:job_list' %}">Jobs</a></li>
+                    <li class="breadcrumb-item active" aria-current="page">{{ job.title }}</li>
+                </ol>
+            </nav>
+            
+            <!-- Job Header -->
+            <div class="job-header">
+                <div class="d-flex justify-content-between align-items-start">
+                    <div>
+                        <h2 class="mb-2">{{ job.title }}</h2>
+                        <div class="d-flex align-items-center mb-3">
+                            <span id="job-status-container">
+                                <span class="status-badge status-{{ job.status }}">{{ job.get_status_display }}</span>
+                            </span>
+                            {% if job.priority %}
+                                <span class="priority-badge ms-2" style="background-color: {{ job.priority.color }}; color: white;">
+                                    {{ job.priority.name }}
+                                </span>
+                            {% endif %}
+                            <span class="job-type-badge ms-2" style="background-color: {{ job.job_type.color }}; color: white;">
+                                {{ job.job_type.name }}
+                            </span>
+                        </div>
+                        
+                        <div class="schedule-info">
+                            {% if job.scheduled_start_date %}
+                                <i class="fas fa-calendar-alt"></i> Scheduled: 
+                                {{ job.scheduled_start_date|date:"F j, Y, g:i a" }}
+                                {% if job.scheduled_end_date %}
+                                    to {{ job.scheduled_end_date|date:"F j, Y, g:i a" }}
+                                {% endif %}
+                                {% if job.is_overdue %}
+                                    <span class="overdue">(Overdue)</span>
+                                {% endif %}
+                            {% else %}
+                                <i class="fas fa-calendar-times"></i> Not scheduled yet
+                            {% endif %}
+                        </div>
+                        
+                        <div class="mt-2 text-muted">
+                            <small>Created {{ job.created_at|date:"F j, Y" }} by {{ job.created_by.get_full_name|default:job.created_by.username }}</small>
+                            <br>
+                            <small>
+                                {% if job.assigned_team %}
+                                    Assigned to {{ job.assigned_team.name }}
+                                    {% if job.assigned_to %}
+                                        ({{ job.assigned_to.get_full_name|default:job.assigned_to.username }})
+                                    {% endif %}
+                                {% elif job.assigned_to %}
+                                    Assigned to {{ job.assigned_to.get_full_name|default:job.assigned_to.username }}
+                                {% else %}
+                                    Not assigned
+                                {% endif %}
+                            </small>
+                        </div>
+                        
+                        {% if job.get_tags_list %}
+                            <div class="job-tags-container">
+                                {% for tag in job.get_tags_list %}
+                                    <span class="job-tag">{{ tag }}</span>
+                                {% endfor %}
+                            </div>
+                        {% endif %}
+                    </div>
+                    
+                    <div>
+                        <div class="btn-group">
+                            <a href="{% url 'jobs:job_update' job.pk %}" class="btn btn-outline-primary">
+                                <i class="fas fa-edit"></i> Edit
+                            </a>
+                            {% if job.status == 'pending' or job.status == 'scheduled' %}
+                                <button type="button" class="btn btn-outline-success" 
+                                        hx-post="{% url 'jobs:mark_started' job.pk %}" 
+                                        hx-target="#job-status-container">
+                                    <i class="fas fa-play"></i> Start Job
+                                </button>
+                            {% elif job.status == 'in_progress' %}
+                                <button type="button" class="btn btn-outline-success" 
+                                        hx-post="{% url 'jobs:mark_completed' job.pk %}" 
+                                        hx-target="#job-status-container">
+                                    <i class="fas fa-check"></i> Complete Job
+                                </button>
+                            {% endif %}
+                            <button type="button" class="btn btn-outline-danger" data-bs-toggle="modal" data-bs-target="#deleteJobModal">
+                                <i class="fas fa-trash-alt"></i> Delete
+                            </button>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Progress Bar for Tasks -->
+                {% if job.tasks.count > 0 %}
+                    <div class="mt-3">
+                        <div class="d-flex justify-content-between align-items-center mb-1">
+                            <small>Job Progress</small>
+                            <small>{{ job.get_progress_percentage }}%</small>
+                        </div>
+                        <div class="progress">
+                            <div class="progress-bar bg-success" role="progressbar" style="width: {{ job.get_progress_percentage }}%" aria-valuenow="{{ job.get_progress_percentage }}" aria-valuemin="0" aria-valuemax="100"></div>
+                        </div>
+                    </div>
+                {% endif %}
+            </div>
+            
+            <div class="row">
+                <!-- Left Column -->
+                <div class="col-lg-8">
+                    <!-- Job Description -->
+                    <div class="job-section">
+                        <h3 class="section-title">Description</h3>
+                        <div class="card">
+                            <div class="card-body">
+                                {% if job.description %}
+                                    <p>{{ job.description|linebreaks }}</p>
+                                {% else %}
+                                    <p class="text-muted">No description provided.</p>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Tasks -->
+                    <div class="job-section">
+                        <h3 class="section-title">Tasks</h3>
+                        <div class="card">
+                            <div class="card-body">
+                                <div id="tasks-container">
+                                    {% if tasks %}
+                                        {% for task in tasks %}
+                                            <div class="task-item {% if task.is_completed %}task-completed{% endif %}">
+                                                <div class="form-check">
+                                                    <input class="form-check-input task-checkbox" type="checkbox" 
+                                                           {% if task.is_completed %}checked{% endif %}
+                                                           hx-post="{% url 'jobs:toggle_task' task.pk %}"
+                                                           hx-swap="outerHTML"
+                                                           hx-target="closest .task-item">
+                                                    <label class="form-check-label">
+                                                        {{ task.description }}
+                                                    </label>
+                                                </div>
+                                                {% if task.completed_at %}
+                                                    <span class="ms-auto text-muted small">
+                                                        Completed {{ task.completed_at|date:"M d, Y" }}
+                                                        {% if task.completed_by %}
+                                                            by {{ task.completed_by.get_full_name|default:task.completed_by.username }}
+                                                        {% endif %}
+                                                    </span>
+                                                {% endif %}
+                                            </div>
+                                        {% endfor %}
+                                    {% else %}
+                                        <p class="text-muted">No tasks added yet.</p>
+                                    {% endif %}
+                                </div>
+                                
+                                <hr>
+                                
+                                <!-- Add Task Form -->
+                                <form hx-post="{% url 'jobs:add_task' job.pk %}" 
+                                      hx-target="#tasks-container" 
+                                      hx-swap="beforeend"
+                                      class="mt-3">
+                                    {% csrf_token %}
+                                    <div class="input-group">
+                                        <input type="text" name="description" class="form-control" placeholder="Add a task..." required>
+                                        <button type="submit" class="btn btn-primary">Add</button>
+                                    </div>
+                                </form>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Notes -->
+                    <div class="job-section">
+                        <h3 class="section-title">Notes</h3>
+                        <div class="card">
+                            <div class="card-body">
+                                <div id="notes-container">
+                                    {% if notes %}
+                                        {% for note in notes %}
+                                            <div class="note-item">
+                                                <div class="note-header">
+                                                    <span class="note-author">{{ note.author.get_full_name|default:note.author.username }}</span>
+                                                    <span class="note-date">{{ note.created_at|date:"M d, Y, g:i a" }}</span>
+                                                </div>
+                                                <div class="note-content">
+                                                    {{ note.content|linebreaks }}
+                                                </div>
+                                            </div>
+                                        {% endfor %}
+                                    {% else %}
+                                        <p class="text-muted">No notes yet.</p>
+                                    {% endif %}
+                                </div>
+                                
+                                <hr>
+                                
+                                <!-- Add Note Form -->
+                                <form hx-post="{% url 'jobs:add_note' job.pk %}" 
+                                      hx-target="#notes-container" 
+                                      hx-swap="beforeend"
+                                      class="mt-3">
+                                    {% csrf_token %}
+                                    <div class="mb-3">
+                                        <textarea name="content" class="form-control" rows="3" placeholder="Add a note..." required></textarea>
+                                    </div>
+                                    <button type="submit" class="btn btn-primary">Add Note</button>
+                                </form>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Inventory Usage -->
+                    <div class="job-section">
+                        <h3 class="section-title">Inventory Usage</h3>
+                        <div class="card">
+                            <div class="card-body">
+                                <div id="inventory-container">
+                                    {% if inventory_usage %}
+                                        {% for usage in inventory_usage %}
+                                            <div class="inventory-item">
+                                                <div class="inventory-header">
+                                                    <span class="inventory-name">{{ usage.quantity }} x {{ usage.item_name }}</span>
+                                                    <span class="inventory-date">{{ usage.used_at|date:"M d, Y" }}</span>
+                                                </div>
+                                                <div class="inventory-details">
+                                                    <p class="mb-1">
+                                                        {% if usage.unit_cost %}
+                                                            Unit Cost: R{{ usage.unit_cost }} | Total: R{{ usage.get_total_cost }}
+                                                        {% endif %}
+                                                    </p>
+                                                    <p class="mb-0 text-muted">
+                                                        Company: {{ usage.get_company_display }}
+                                                        {% if usage.used_by %}
+                                                            | Used by: {{ usage.used_by.get_full_name|default:usage.used_by.username }}
+                                                        {% endif %}
+                                                    </p>
+                                                    {% if usage.notes %}
+                                                        <div class="mt-2">
+                                                            <small class="text-muted">{{ usage.notes }}</small>
+                                                        </div>
+                                                    {% endif %}
+                                                </div>
+                                            </div>
+                                        {% endfor %}
+                                    {% else %}
+                                        <p class="text-muted">No inventory items used yet.</p>
+                                    {% endif %}
+                                </div>
+                                
+                                <hr>
+                                
+                                <!-- Add Inventory Usage Form -->
+                                <form hx-post="{% url 'jobs:add_inventory' job.pk %}" 
+                                      hx-target="#inventory-container" 
+                                      hx-swap="beforeend"
+                                      class="mt-3">
+                                    {% csrf_token %}
+                                    <div class="row">
+                                        <div class="col-md-4 mb-3">
+                                            <input type="text" name="item_name" class="form-control" placeholder="Item name" required>
+                                        </div>
+                                        <div class="col-md-2 mb-3">
+                                            <input type="number" name="quantity" class="form-control" placeholder="Qty" min="1" required>
+                                        </div>
+                                        <div class="col-md-3 mb-3">
+                                            <input type="number" name="unit_cost" step="0.01" class="form-control" placeholder="Unit cost (R)">
+                                        </div>
+                                        <div class="col-md-3 mb-3">
+                                            <select name="company" class="form-select">
+                                                <option value="wisp">WISP</option>
+                                                <option value="fno">FNO</option>
+                                            </select>
+                                        </div>
+                                    </div>
+                                    <div class="mb-3">
+                                        <textarea name="notes" class="form-control" rows="2" placeholder="Notes (optional)"></textarea>
+                                    </div>
+                                    <button type="submit" class="btn btn-primary">Add Item</button>
+                                </form>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Right Column -->
+                <div class="col-lg-4">
+                    <!-- Location Information -->
+                    <div class="job-section">
+                        <h3 class="section-title">Location</h3>
+                        <div class="card">
+                            <div class="card-body">
+                                {% if job.location %}
+                                    <h5>{{ job.location.name }}</h5>
+                                    <p class="mb-2">
+                                        <i class="fas fa-map-marker-alt"></i> 
+                                        {% if job.location.address %}
+                                            {{ job.location.address }}
+                                        {% else %}
+                                            {{ job.location.city }}
+                                        {% endif %}
+                                    </p>
+                                    <p class="mb-2">
+                                        <i class="fas fa-tag"></i> {{ job.location.get_location_type_display }}
+                                    </p>
+                                    {% if job.location.coordinates %}
+                                        <p class="mb-2">
+                                            <i class="fas fa-map"></i> {{ job.location.coordinates }}
+                                        </p>
+                                    {% endif %}
+                                    {% if job.location.location_type == 'tower' %}
+                                        {% if job.location.tower_height %}
+                                            <p class="mb-2">
+                                                <i class="fas fa-broadcast-tower"></i> Height: {{ job.location.tower_height }}m
+                                            </p>
+                                        {% endif %}
+                                        {% if job.location.tower_id %}
+                                            <p class="mb-2">
+                                                <i class="fas fa-hashtag"></i> Tower ID: {{ job.location.tower_id }}
+                                            </p>
+                                        {% endif %}
+                                    {% endif %}
+                                    {% if job.location.is_fiber_connected %}
+                                        <p class="mb-2">
+                                            <i class="fas fa-network-wired"></i> Fiber Connected
+                                            {% if job.location.fiber_termination_type %}
+                                                ({{ job.location.fiber_termination_type }})
+                                            {% endif %}
+                                        </p>
+                                    {% endif %}
+                                    {% if job.location.notes %}
+                                        <div class="mt-3">
+                                            <strong>Notes:</strong>
+                                            <p class="small">{{ job.location.notes }}</p>
+                                        </div>
+                                    {% endif %}
+                                    <div class="text-center mt-3">
+                                        <a href="{% url 'jobs:location_detail' job.location.pk %}" class="btn btn-sm btn-outline-primary">
+                                            View Location Details
+                                        </a>
+                                    </div>
+                                {% else %}
+                                    <p class="text-muted">No location assigned to this job.</p>
+                                    <div class="text-center">
+                                        <a href="{% url 'jobs:job_update' job.pk %}" class="btn btn-sm btn-outline-primary">
+                                            Assign Location
+                                        </a>
+                                    </div>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Team Information -->
+                    <div class="job-section">
+                        <h3 class="section-title">Team Assignment</h3>
+                        <div class="card">
+                            <div class="card-body">
+                                {% if job.assigned_team %}
+                                    <h5>{{ job.assigned_team.name }}</h5>
+                                    <p class="mb-2">
+                                        <i class="fas fa-users"></i> {{ job.assigned_team.get_team_type_display }}
+                                    </p>
+                                    {% if job.assigned_team.team_lead %}
+                                        <p class="mb-2">
+                                            <i class="fas fa-user-tie"></i> Team Lead: {{ job.assigned_team.team_lead.get_full_name|default:job.assigned_team.team_lead.username }}
+                                        </p>
+                                    {% endif %}
+                                    {% if job.assigned_to %}
+                                        <p class="mb-2">
+                                            <i class="fas fa-user"></i> Assigned To: {{ job.assigned_to.get_full_name|default:job.assigned_to.username }}
+                                        </p>
+                                    {% endif %}
+                                    <div class="text-center mt-3">
+                                        <a href="{% url 'jobs:team_detail' job.assigned_team.pk %}" class="btn btn-sm btn-outline-primary">
+                                            View Team Details
+                                        </a>
+                                    </div>
+                                {% else %}
+                                    <p class="text-muted">No team assigned to this job.</p>
+                                    <div class="text-center">
+                                        <a href="{% url 'jobs:job_update' job.pk %}" class="btn btn-sm btn-outline-primary">
+                                            Assign Team
+                                        </a>
+                                    </div>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Civil Workers -->
+                    <div class="job-section">
+                        <h3 class="section-title">Civil Workers</h3>
+                        <div class="card">
+                            <div class="card-body">
+                                <div id="civil-workers-container">
+                                    {% if civil_workers %}
+                                        {% for assignment in civil_workers %}
+                                            <div class="civil-worker-item">
+                                                <div class="d-flex justify-content-between align-items-start mb-2">
+                                                    <h6 class="mb-0">{{ assignment.worker.get_full_name }}</h6>
+                                                    <span class="worker-status {% if assignment.is_active %}worker-active{% else %}worker-inactive{% endif %}">
+                                                        {% if assignment.is_active %}Active{% else %}Inactive{% endif %}
+                                                    </span>
+                                                </div>
+                                                <div class="row">
+                                                    <div class="col-md-6">
+                                                        <p class="mb-1 small">
+                                                            <i class="fas fa-calendar-alt"></i> Start: {{ assignment.start_date|date:"M d, Y" }}
+                                                        </p>
+                                                    </div>
+                                                    <div class="col-md-6">
+                                                        <p class="mb-1 small">
+                                                            <i class="fas fa-calendar-check"></i> End: 
+                                                            {% if assignment.end_date %}
+                                                                {{ assignment.end_date|date:"M d, Y" }}
+                                                            {% else %}
+                                                                <span class="text-muted">Not set</span>
+                                                            {% endif %}
+                                                        </p>
+                                                    </div>
+                                                </div>
+                                                <p class="mb-1 small">
+                                                    <i class="fas fa-money-bill-wave"></i> Daily Rate: R{{ assignment.daily_rate }}
+                                                </p>
+                                                <p class="mb-1 small">
+                                                    <i class="fas fa-calendar-day"></i> Days Worked: {{ assignment.get_days_worked }}
+                                                    (Total: R{{ assignment.get_total_cost }})
+                                                </p>
+                                                {% if assignment.notes %}
+                                                    <p class="mb-0 small text-muted">
+                                                        {{ assignment.notes }}
+                                                    </p>
+                                                {% endif %}
+                                                
+                                                {% if assignment.is_active %}
+                                                    <div class="text-end mt-2">
+                                                        <button class="btn btn-sm btn-outline-secondary"
+                                                                hx-post="{% url 'jobs:end_civil_assignment' assignment.pk %}"
+                                                                hx-target="closest .civil-worker-item"
+                                                                hx-swap="outerHTML">
+                                                            End Assignment
+                                                        </button>
+                                                    </div>
+                                                {% endif %}
+                                            </div>
+                                        {% endfor %}
+                                    {% else %}
+                                        <p class="text-muted">No civil workers assigned to this job.</p>
+                                    {% endif %}
+                                </div>
+                                
+                                <hr>
+                                
+                                <!-- Add Civil Worker Form -->
+                                {% if job.requires_civil_team %}
+                                    <form hx-post="{% url 'jobs:add_civil_worker' job.pk %}" 
+                                          hx-target="#civil-workers-container" 
+                                          hx-swap="beforeend"
+                                          class="mt-3">
+                                        {% csrf_token %}
+                                        <div class="mb-3">
+                                            <select name="worker" class="form-select" required>
+                                                <option value="">Select Worker</option>
+                                                {% for worker in civil_worker_form.fields.worker.queryset %}
+                                                    <option value="{{ worker.pk }}">{{ worker.get_full_name }}</option>
+                                                {% endfor %}
+                                            </select>
+                                        </div>
+                                        <div class="row">
+                                            <div class="col-md-6 mb-3">
+                                                <label class="form-label small">Start Date</label>
+                                                <input type="date" name="start_date" class="form-control" required value="{{ today|date:'Y-m-d' }}">
+                                            </div>
+                                            <div class="col-md-6 mb-3">
+                                                <label class="form-label small">Daily Rate (R)</label>
+                                                <input type="number" name="daily_rate" step="0.01" class="form-control" required>
+                                            </div>
+                                        </div>
+                                        <div class="mb-3">
+                                            <textarea name="notes" class="form-control" rows="2" placeholder="Notes (optional)"></textarea>
+                                        </div>
+                                        <button type="submit" class="btn btn-primary">Add Worker</button>
+                                    </form>
+                                {% else %}
+                                    <div class="text-center">
+                                        <a href="{% url 'jobs:job_update' job.pk %}?enable_civil=1" class="btn btn-sm btn-outline-primary">
+                                            Enable Civil Team for This Job
+                                        </a>
+                                    </div>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Attachments -->
+                    <div class="job-section">
+                        <h3 class="section-title">Attachments</h3>
+                        <div class="card">
+                            <div class="card-body">
+                                <div id="attachments-container">
+                                    {% if attachments %}
+                                        {% for attachment in attachments %}
+                                            <div class="attachment-item">
+                                                <div class="attachment-icon">
+                                                    <i class="fas fa-file"></i>
+                                                </div>
+                                                <div class="attachment-info">
+                                                    <div class="attachment-name">
+                                                        <a href="{{ attachment.file.url }}" target="_blank">{{ attachment.file_name }}</a>
+                                                    </div>
+                                                    <div class="attachment-meta">
+                                                        {{ attachment.file_size|filesizeformat }} • 
+                                                        Uploaded {{ attachment.uploaded_at|date:"M d, Y" }} by 
+                                                        {{ attachment.uploaded_by.get_full_name|default:attachment.uploaded_by.username }}
+                                                    </div>
+                                                    {% if attachment.description %}
+                                                        <div class="small text-muted">{{ attachment.description }}</div>
+                                                    {% endif %}
+                                                </div>
+                                                <a href="{{ attachment.file.url }}" class="btn btn-sm btn-outline-primary ms-2" download>
+                                                    <i class="fas fa-download"></i>
+                                                </a>
+                                            </div>
+                                        {% endfor %}
+                                    {% else %}
+                                        <p class="text-muted">No attachments added yet.</p>
+                                    {% endif %}
+                                </div>
+                                
+                                <hr>
+                                
+                                <!-- Add Attachment Form -->
+                                <form hx-post="{% url 'jobs:add_attachment' job.pk %}" 
+                                      hx-target="#attachments-container" 
+                                      hx-swap="beforeend"
+                                      hx-encoding="multipart/form-data"
+                                      class="mt-3">
+                                    {% csrf_token %}
+                                    <div class="mb-3">
+                                        <input type="file" name="file" class="form-control" required>
+                                    </div>
+                                    <div class="mb-3">
+                                        <input type="text" name="description" class="form-control" placeholder="Description (optional)">
+                                    </div>
+                                    <button type="submit" class="btn btn-primary">Upload</button>
+                                </form>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Status History -->
+                    <div class="job-section">
+                        <h3 class="section-title">Status History</h3>
+                        <div class="card">
+                            <div class="card-body">
+                                {% if status_updates %}
+                                    <div class="timeline">
+                                        {% for update in status_updates %}
+                                            <div class="status-update-item">
+                                                <div class="d-flex justify-content-between mb-1">
+                                                    <div>
+                                                        <span class="status-badge status-{{ update.old_status }}">{{ update.get_old_status_display }}</span>
+                                                        <i class="fas fa-arrow-right mx-2"></i>
+                                                        <span class="status-badge status-{{ update.new_status }}">{{ update.get_new_status_display }}</span>
+                                                    </div>
+                                                    <small class="text-muted">{{ update.updated_at|date:"M d, Y, g:i a" }}</small>
+                                                </div>
+                                                <div class="d-flex justify-content-between">
+                                                    <small class="text-muted">By: {{ update.updated_by.get_full_name|default:update.updated_by.username }}</small>
+                                                </div>
+                                                {% if update.notes %}
+                                                    <div class="mt-2 small">
+                                                        {{ update.notes }}
+                                                    </div>
+                                                {% endif %}
+                                            </div>
+                                        {% endfor %}
+                                    </div>
+                                {% else %}
+                                    <p class="text-muted">No status updates yet.</p>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Delete Job Modal -->
+<div class="modal fade" id="deleteJobModal" tabindex="-1" aria-labelledby="deleteJobModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="deleteJobModalLabel">Confirm Delete</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <p>Are you sure you want to delete this job?</p>
+                <p class="text-danger"><strong>This action cannot be undone.</strong></p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                <form action="{% url 'jobs:job_delete' job.pk %}" method="post">
+                    {% csrf_token %}
+                    <button type="submit" class="btn btn-danger">Delete Job</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

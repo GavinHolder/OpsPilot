@@ -1,0 +1,18 @@
+<div class="attachment-item">
+    <div class="attachment-icon">
+        <i class="fas fa-file"></i>
+    </div>
+    <div class="attachment-info">
+        <div class="attachment-name">
+            <a href="{{ attachment.file.url }}" target="_blank">{{ attachment.file_name }}</a>
+        </div>
+        <div class="attachment-meta">
+            {{ attachment.file_size|filesizeformat }} •
+            Uploaded {{ attachment.uploaded_at|date:"M d, Y" }} by
+            {{ attachment.uploaded_by.get_full_name|default:attachment.uploaded_by.username }}
+        </div>
+    </div>
+    <a href="{{ attachment.file.url }}" class="btn btn-sm btn-outline-primary ms-2" download>
+        <i class="fas fa-download"></i>
+    </a>
+</div>

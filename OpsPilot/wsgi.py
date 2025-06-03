@@ -17,3 +17,5 @@ application = get_wsgi_application()
 
 # Import dashboard signals here
 import applications.dashboard.signals
+import applications.tasks.signals
+import applications.jobs.signals

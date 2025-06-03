@@ -1,0 +1,370 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Voice to Task | OpsPilot{% endblock %}
+
+{% block tasks_active %}active{% endblock %}
+
+{% block extra_css %}
+<style>
+    .voice-input-container {
+        max-width: 600px;
+        margin: 0 auto;
+    }
+    .recorder-card {
+        border-radius: 10px;
+        box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+        overflow: hidden;
+    }
+    .recorder-header {
+        padding: 20px;
+        background-color: #f8f9fa;
+        border-bottom: 1px solid #dee2e6;
+    }
+    .recorder-body {
+        padding: 30px;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+    }
+    .mic-button {
+        width: 80px;
+        height: 80px;
+        border-radius: 50%;
+        background-color: #dc3545;
+        color: white;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        font-size: 1.5rem;
+        cursor: pointer;
+        transition: all 0.3s;
+        margin-bottom: 20px;
+    }
+    .mic-button:hover {
+        transform: scale(1.05);
+    }
+    .mic-button.recording {
+        animation: pulse 1.5s infinite;
+    }
+    @keyframes pulse {
+        0% {
+            transform: scale(1);
+        }
+        50% {
+            transform: scale(1.1);
+        }
+        100% {
+            transform: scale(1);
+        }
+    }
+    .recording-time {
+        font-size: 1.2rem;
+        margin-bottom: 20px;
+    }
+    .recording-status {
+        margin-bottom: 20px;
+        text-align: center;
+    }
+    .voice-controls {
+        display: flex;
+        gap: 10px;
+        margin-top: 20px;
+    }
+    .waveform-container {
+        width: 100%;
+        height: 100px;
+        margin-bottom: 20px;
+    }
+    .transcription-container {
+        width: 100%;
+        margin-top: 20px;
+        display: none;
+    }
+    .transcription-text {
+        background-color: #f8f9fa;
+        padding: 15px;
+        border-radius: 8px;
+        margin-bottom: 20px;
+    }
+    .task-preview {
+        background-color: #e9ecef;
+        padding: 15px;
+        border-radius: 8px;
+        margin-bottom: 20px;
+    }
+    .task-preview-header {
+        font-weight: 600;
+        margin-bottom: 10px;
+    }
+    .field-row {
+        display: flex;
+        margin-bottom: 8px;
+    }
+    .field-label {
+        font-weight: 600;
+        width: 120px;
+    }
+    .field-value {
+        flex-grow: 1;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-12">
+            <!-- Breadcrumb -->
+            <nav aria-label="breadcrumb" class="mb-4">
+                <ol class="breadcrumb">
+                    <li class="breadcrumb-item"><a href="{% url 'dashboard:index' %}">Dashboard</a></li>
+                    <li class="breadcrumb-item"><a href="{% url 'tasks:task_list' %}">Tasks</a></li>
+                    <li class="breadcrumb-item active" aria-current="page">Voice to Task</li>
+                </ol>
+            </nav>
+            
+            <div class="voice-input-container">
+                <div class="card recorder-card">
+                    <div class="recorder-header">
+                        <h2 class="mb-0">Voice to Task</h2>
+                    </div>
+                    <div class="recorder-body">
+                        <p class="text-muted text-center mb-4">Speak your task details and we'll convert it to a task automatically</p>
+                        
+                        <!-- Initial Recording UI -->
+                        <div id="initial-recording-ui">
+                            <div id="mic-button" class="mic-button">
+                                <i class="fas fa-microphone"></i>
+                            </div>
+                            <div class="recording-status">
+                                <p>Tap to start recording</p>
+                            </div>
+                        </div>
+                        
+                        <!-- Active Recording UI (Hidden initially) -->
+                        <div id="active-recording-ui" style="display: none; width: 100%;">
+                            <div class="recording-time" id="recording-time">00:00</div>
+                            <div class="waveform-container" id="waveform"></div>
+                            <div class="voice-controls">
+                                <button id="stop-recording" class="btn btn-danger">
+                                    <i class="fas fa-stop"></i> Stop
+                                </button>
+                                <button id="cancel-recording" class="btn btn-secondary">
+                                    <i class="fas fa-times"></i> Cancel
+                                </button>
+                            </div>
+                        </div>
+                        
+                        <!-- Processing UI (Hidden initially) -->
+                        <div id="processing-ui" style="display: none; width: 100%;">
+                            <div class="text-center mb-4">
+                                <div class="spinner-border text-primary" role="status">
+                                    <span class="visually-hidden">Loading...</span>
+                                </div>
+                                <p class="mt-2">Processing your recording...</p>
+                            </div>
+                        </div>
+                        
+                        <!-- Result UI (Hidden initially) -->
+                        <div id="result-ui" style="display: none; width: 100%;">
+                            <div class="transcription-container">
+                                <h5>Transcription</h5>
+                                <div class="transcription-text" id="transcription-text">
+                                    Need to get trenching team to Kabelkop by Friday, 30 meters, fix burst pipe.
+                                </div>
+                                
+                                <h5>Task Preview</h5>
+                                <div class="task-preview">
+                                    <div class="task-preview-header">Civil Repair – Kabelkop trench</div>
+                                    
+                                    <div class="field-row">
+                                        <div class="field-label">Category:</div>
+                                        <div class="field-value">Civil Work</div>
+                                    </div>
+                                    
+                                    <div class="field-row">
+                                        <div class="field-label">Location:</div>
+                                        <div class="field-value">Kabelkop</div>
+                                    </div>
+                                    
+                                    <div class="field-row">
+                                        <div class="field-label">Deadline:</div>
+                                        <div class="field-value">Friday, June 6, 2025</div>
+                                    </div>
+                                    
+                                    <div class="field-row">
+                                        <div class="field-label">Assigned to:</div>
+                                        <div class="field-value">Civil Team</div>
+                                    </div>
+                                    
+                                    <div class="field-row">
+                                        <div class="field-label">Details:</div>
+                                        <div class="field-value">Fix burst pipe, 30m</div>
+                                    </div>
+                                </div>
+                                
+                                <div class="d-grid gap-2">
+                                    <button id="create-task" class="btn btn-primary">
+                                        <i class="fas fa-check"></i> Create Task
+                                    </button>
+                                    <button id="edit-task" class="btn btn-outline-secondary">
+                                        <i class="fas fa-edit"></i> Edit Task Details
+                                    </button>
+                                    <button id="redo-recording" class="btn btn-outline-danger">
+                                        <i class="fas fa-redo"></i> Record Again
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="text-center mt-4">
+                    <a href="{% url 'tasks:task_list' %}" class="btn btn-outline-secondary">
+                        <i class="fas fa-arrow-left"></i> Back to Tasks
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const micButton = document.getElementById('mic-button');
+        const stopRecordingBtn = document.getElementById('stop-recording');
+        const cancelRecordingBtn = document.getElementById('cancel-recording');
+        const createTaskBtn = document.getElementById('create-task');
+        const editTaskBtn = document.getElementById('edit-task');
+        const redoRecordingBtn = document.getElementById('redo-recording');
+        const recordingTime = document.getElementById('recording-time');
+        const initialRecordingUI = document.getElementById('initial-recording-ui');
+        const activeRecordingUI = document.getElementById('active-recording-ui');
+        const processingUI = document.getElementById('processing-ui');
+        const resultUI = document.getElementById('result-ui');
+        
+        let mediaRecorder;
+        let audioChunks = [];
+        let recordingInterval;
+        let secondsRecorded = 0;
+        
+        // Start recording when mic button is clicked
+        micButton.addEventListener('click', function() {
+            navigator.mediaDevices.getUserMedia({ audio: true })
+                .then(stream => {
+                    // Initialize media recorder
+                    mediaRecorder = new MediaRecorder(stream);
+                    audioChunks = [];
+                    
+                    // Collect audio chunks
+                    mediaRecorder.addEventListener('dataavailable', event => {
+                        audioChunks.push(event.data);
+                    });
+                    
+                    // When recording stops
+                    mediaRecorder.addEventListener('stop', () => {
+                        // Show processing UI
+                        activeRecordingUI.style.display = 'none';
+                        processingUI.style.display = 'block';
+                        
+                        // In a real app, send the audio to the server for processing
+                        // For demo, we'll just show the result UI after a delay
+                        setTimeout(() => {
+                            processingUI.style.display = 'none';
+                            resultUI.style.display = 'block';
+                            document.querySelector('.transcription-container').style.display = 'block';
+                        }, 2000);
+                    });
+                    
+                    // Start recording
+                    mediaRecorder.start();
+                    micButton.classList.add('recording');
+                    
+                    // Start timer
+                    secondsRecorded = 0;
+                    updateRecordingTime();
+                    recordingInterval = setInterval(updateRecordingTime, 1000);
+                    
+                    // Switch to active recording UI
+                    initialRecordingUI.style.display = 'none';
+                    activeRecordingUI.style.display = 'block';
+                })
+                .catch(error => {
+                    console.error('Error accessing microphone:', error);
+                    alert('Could not access your microphone. Please check your browser permissions.');
+                });
+        });
+        
+        // Update recording time display
+        function updateRecordingTime() {
+            secondsRecorded++;
+            const minutes = Math.floor(secondsRecorded / 60).toString().padStart(2, '0');
+            const seconds = (secondsRecorded % 60).toString().padStart(2, '0');
+            recordingTime.textContent = `${minutes}:${seconds}`;
+            
+            // Auto-stop after 2 minutes
+            if (secondsRecorded >= 120) {
+                stopRecording();
+            }
+        }
+        
+        // Stop recording
+        stopRecordingBtn.addEventListener('click', stopRecording);
+        
+        function stopRecording() {
+            if (mediaRecorder && mediaRecorder.state !== 'inactive') {
+                clearInterval(recordingInterval);
+                mediaRecorder.stop();
+                
+                // Stop all tracks in the stream
+                mediaRecorder.stream.getTracks().forEach(track => track.stop());
+            }
+        }
+        
+        // Cancel recording
+        cancelRecordingBtn.addEventListener('click', function() {
+            if (mediaRecorder && mediaRecorder.state !== 'inactive') {
+                clearInterval(recordingInterval);
+                mediaRecorder.stop();
+                
+                // Stop all tracks in the stream
+                mediaRecorder.stream.getTracks().forEach(track => track.stop());
+            }
+            
+            // Reset to initial UI
+            activeRecordingUI.style.display = 'none';
+            processingUI.style.display = 'none';
+            resultUI.style.display = 'none';
+            initialRecordingUI.style.display = 'block';
+            micButton.classList.remove('recording');
+        });
+        
+        // Create task button
+        createTaskBtn.addEventListener('click', function() {
+            // In a real app, this would submit the task to the server
+            // For demo, just redirect to the task list with a success message
+            window.location.href = "{% url 'tasks:task_list' %}?created=1";
+        });
+        
+        // Edit task button
+        editTaskBtn.addEventListener('click', function() {
+            // In a real app, this would open a form with the parsed task details
+            // For demo, just redirect to the task creation form
+            window.location.href = "{% url 'tasks:task_create' %}";
+        });
+        
+        // Record again button
+        redoRecordingBtn.addEventListener('click', function() {
+            // Reset to initial UI
+            activeRecordingUI.style.display = 'none';
+            processingUI.style.display = 'none';
+            resultUI.style.display = 'none';
+            initialRecordingUI.style.display = 'block';
+            micButton.classList.remove('recording');
+        });
+    });
+</script>
+{% endblock %}

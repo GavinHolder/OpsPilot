@@ -1,0 +1,290 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}{% if form.instance.pk %}Edit Task{% else %}New Task{% endif %} | OpsPilot{% endblock %}
+
+{% block tasks_active %}active{% endblock %}
+
+{% block extra_css %}
+<style>
+    .form-card {
+        border-radius: 8px;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        margin-bottom: 20px;
+    }
+    .form-section {
+        padding: 20px;
+        border-bottom: 1px solid #e9ecef;
+    }
+    .form-section:last-of-type {
+        border-bottom: none;
+    }
+    .section-title {
+        font-weight: 600;
+        margin-bottom: 15px;
+        color: #343a40;
+    }
+    .required-field label:after {
+        content: " *";
+        color: #dc3545;
+    }
+    .form-help-text {
+        color: #6c757d;
+        font-size: 0.875rem;
+        margin-top: 5px;
+    }
+    .category-color {
+        display: inline-block;
+        width: 15px;
+        height: 15px;
+        border-radius: 50%;
+        margin-right: 5px;
+    }
+    @media (max-width: 768px) {
+        .form-section {
+            padding: 15px;
+        }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row justify-content-center">
+        <div class="col-lg-8">
+            <!-- Breadcrumb -->
+            <nav aria-label="breadcrumb" class="mb-4">
+                <ol class="breadcrumb">
+                    <li class="breadcrumb-item"><a href="{% url 'dashboard:index' %}">Dashboard</a></li>
+                    <li class="breadcrumb-item"><a href="{% url 'tasks:task_list' %}">Tasks</a></li>
+                    <li class="breadcrumb-item active" aria-current="page">
+                        {% if form.instance.pk %}Edit Task{% else %}New Task{% endif %}
+                    </li>
+                </ol>
+            </nav>
+            
+            <h2 class="mb-4">{% if form.instance.pk %}Edit Task: {{ form.instance.title }}{% else %}Create New Task{% endif %}</h2>
+            
+            <form method="post" enctype="multipart/form-data">
+                {% csrf_token %}
+                
+                <!-- Basic Information -->
+                <div class="card form-card">
+                    <div class="form-section">
+                        <h3 class="section-title">Task Information</h3>
+                        
+                        <div class="mb-3 required-field">
+                            <label for="{{ form.title.id_for_label }}" class="form-label">Title</label>
+                            {{ form.title }}
+                            {% if form.title.errors %}
+                                <div class="text-danger">{{ form.title.errors }}</div>
+                            {% endif %}
+                            {% if form.title.help_text %}
+                                <div class="form-help-text">{{ form.title.help_text }}</div>
+                            {% endif %}
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label for="{{ form.description.id_for_label }}" class="form-label">Description</label>
+                            {{ form.description }}
+                            {% if form.description.errors %}
+                                <div class="text-danger">{{ form.description.errors }}</div>
+                            {% endif %}
+                            {% if form.description.help_text %}
+                                <div class="form-help-text">{{ form.description.help_text }}</div>
+                            {% endif %}
+                        </div>
+                        
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label for="{{ form.priority.id_for_label }}" class="form-label">Priority</label>
+                                {{ form.priority }}
+                                {% if form.priority.errors %}
+                                    <div class="text-danger">{{ form.priority.errors }}</div>
+                                {% endif %}
+                            </div>
+                            
+                            <div class="col-md-6 mb-3">
+                                <label for="{{ form.category.id_for_label }}" class="form-label">Category</label>
+                                {{ form.category }}
+                                {% if form.category.errors %}
+                                    <div class="text-danger">{{ form.category.errors }}</div>
+                                {% endif %}
+                            </div>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label for="{{ form.company.id_for_label }}" class="form-label">Company</label>
+                            {{ form.company }}
+                            {% if form.company.errors %}
+                                <div class="text-danger">{{ form.company.errors }}</div>
+                            {% endif %}
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label for="{{ form.tags.id_for_label }}" class="form-label">Tags</label>
+                            {{ form.tags }}
+                            {% if form.tags.errors %}
+                                <div class="text-danger">{{ form.tags.errors }}</div>
+                            {% endif %}
+                            {% if form.tags.help_text %}
+                                <div class="form-help-text">{{ form.tags.help_text }}</div>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Deadline & Reminders -->
+                <div class="card form-card">
+                    <div class="form-section">
+                        <h3 class="section-title">Deadline & Reminders</h3>
+                        
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label for="{{ form.deadline_date.id_for_label }}" class="form-label">Deadline Date</label>
+                                {{ form.deadline_date }}
+                                {% if form.deadline_date.errors %}
+                                    <div class="text-danger">{{ form.deadline_date.errors }}</div>
+                                {% endif %}
+                            </div>
+                            
+                            <div class="col-md-6 mb-3">
+                                <label for="{{ form.deadline_time.id_for_label }}" class="form-label">Deadline Time</label>
+                                {{ form.deadline_time }}
+                                {% if form.deadline_time.errors %}
+                                    <div class="text-danger">{{ form.deadline_time.errors }}</div>
+                                {% endif %}
+                            </div>
+                        </div>
+                        
+                        <div class="mb-3 form-check">
+                            {{ form.reminder_enabled }}
+                            <label class="form-check-label" for="{{ form.reminder_enabled.id_for_label }}">
+                                Enable Reminder (1 day before deadline)
+                            </label>
+                            {% if form.reminder_enabled.errors %}
+                                <div class="text-danger">{{ form.reminder_enabled.errors }}</div>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Assignment & Related Items -->
+                <div class="card form-card">
+                    <div class="form-section">
+                        <h3 class="section-title">Assignment & Related Items</h3>
+                        
+                        <div class="mb-3">
+                            <label for="{{ form.assigned_to.id_for_label }}" class="form-label">Assign To</label>
+                            {{ form.assigned_to }}
+                            {% if form.assigned_to.errors %}
+                                <div class="text-danger">{{ form.assigned_to.errors }}</div>
+                            {% endif %}
+                        </div>
+                        
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label for="{{ form.related_job.id_for_label }}" class="form-label">Related Job</label>
+                                {{ form.related_job }}
+                                {% if form.related_job.errors %}
+                                    <div class="text-danger">{{ form.related_job.errors }}</div>
+                                {% endif %}
+                            </div>
+                            
+                            <div class="col-md-6 mb-3">
+                                <label for="{{ form.related_tower.id_for_label }}" class="form-label">Related Tower</label>
+                                {{ form.related_tower }}
+                                {% if form.related_tower.errors %}
+                                    <div class="text-danger">{{ form.related_tower.errors }}</div>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Subtasks -->
+                <div class="card form-card">
+                    <div class="form-section">
+                        <h3 class="section-title">Subtasks</h3>
+                        
+                        <div class="mb-3">
+                            <label for="{{ form.subtasks.id_for_label }}" class="form-label">Subtasks (Optional)</label>
+                            {{ form.subtasks }}
+                            {% if form.subtasks.errors %}
+                                <div class="text-danger">{{ form.subtasks.errors }}</div>
+                            {% endif %}
+                            {% if form.subtasks.help_text %}
+                                <div class="form-help-text">{{ form.subtasks.help_text }}</div>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Form Buttons -->
+                <div class="d-flex justify-content-between mt-4 mb-5">
+                    <a href="{% if form.instance.pk %}{% url 'tasks:task_detail' form.instance.pk %}{% else %}{% url 'tasks:task_list' %}{% endif %}" class="btn btn-secondary">
+                        Cancel
+                    </a>
+                    <button type="submit" class="btn btn-primary">
+                        {% if form.instance.pk %}Save Changes{% else %}Create Task{% endif %}
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Add Bootstrap classes to form fields
+        const formFields = document.querySelectorAll('input, select, textarea');
+        formFields.forEach(field => {
+            if (field.type !== 'checkbox') {
+                field.classList.add('form-control');
+            } else {
+                field.classList.add('form-check-input');
+            }
+        });
+        
+        // Initialize deadline date/time pickers
+        const deadlineDateField = document.getElementById('id_deadline_date');
+        if (deadlineDateField) {
+            deadlineDateField.classList.add('form-control');
+        }
+        
+        const deadlineTimeField = document.getElementById('id_deadline_time');
+        if (deadlineTimeField) {
+            deadlineTimeField.classList.add('form-control');
+        }
+        
+        // Colorize priority options
+        const priorityField = document.getElementById('id_priority');
+        if (priorityField) {
+            priorityField.classList.add('form-select');
+        }
+        
+        // Colorize category options
+        const categoryField = document.getElementById('id_category');
+        if (categoryField) {
+            categoryField.classList.add('form-select');
+        }
+        
+        // Style assigned_to field
+        const assignedToField = document.getElementById('id_assigned_to');
+        if (assignedToField) {
+            assignedToField.classList.add('form-select');
+        }
+        
+        // Style company field
+        const companyField = document.getElementById('id_company');
+        if (companyField) {
+            companyField.classList.add('form-select');
+        }
+        
+        // Initialize any other special fields
+        // ...
+    });
+</script>
+{% endblock %}

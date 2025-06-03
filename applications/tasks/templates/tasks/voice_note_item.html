@@ -1,0 +1,22 @@
+<div class="voice-note-item">
+    <div class="voice-note-header">
+        <span class="voice-note-author">
+            {{ voice_note.recorded_by.get_full_name|default:voice_note.recorded_by.username }}
+        </span>
+        <span class="voice-note-date">
+            {{ voice_note.recorded_at|date:"M d, Y, g:i a" }}
+        </span>
+    </div>
+    <div class="voice-note-player">
+        <audio controls class="w-100">
+            <source src="{{ voice_note.audio_file.url }}" type="audio/mpeg">
+            Your browser does not support the audio element.
+        </audio>
+    </div>
+    {% if voice_note.transcription %}
+        <div class="voice-note-transcription">
+            <small class="text-muted">Transcription:</small>
+            <p class="mb-0">{{ voice_note.transcription }}</p>
+        </div>
+    {% endif %}
+</div>

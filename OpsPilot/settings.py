@@ -16,7 +16,6 @@ DEBUG = os.getenv('DEBUG', 'True') == 'True'
 
 ALLOWED_HOSTS = os.getenv('ALLOWED_HOSTS', 'localhost,127.0.0.1').split(',')
 
-
 # Application definition
 
 INSTALLED_APPS = [
@@ -36,7 +35,7 @@ INSTALLED_APPS = [
     'applications.notifications.apps.NotificationsConfig',
     'applications.calendar_app.apps.CalendarAppConfig',
     'applications.notes.apps.NotesConfig',
-    'applications.communication.apps.CommunicationConfig'
+    'applications.communication.apps.CommunicationConfig',
 
     # Third-party apps
     'crispy_forms',
@@ -75,7 +74,6 @@ TEMPLATES = [
 
 WSGI_APPLICATION = 'OpsPilot.wsgi.application'
 
-
 # Database
 # https://docs.djangoproject.com/en/5.2/ref/settings/#databases
 
@@ -85,7 +83,6 @@ DATABASES = {
         'NAME': BASE_DIR / 'db.sqlite3',
     }
 }
-
 
 # Password validation
 # https://docs.djangoproject.com/en/5.2/ref/settings/#auth-password-validators
@@ -105,7 +102,6 @@ AUTH_PASSWORD_VALIDATORS = [
     },
 ]
 
-
 # Internationalization
 # https://docs.djangoproject.com/en/5.2/topics/i18n/
 
@@ -116,7 +112,6 @@ TIME_ZONE = 'Africa/Johannesburg'
 USE_I18N = True
 
 USE_TZ = True
-
 
 # Static files configuration
 STATIC_ROOT = BASE_DIR / 'staticfiles'
@@ -134,6 +129,11 @@ STATICFILES_DIRS = [
 # Media files
 MEDIA_URL = '/media/'
 MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
+
+# Fixtures directory
+FIXTURE_DIRS = [
+    BASE_DIR / 'fixtures',
+]
 
 # Default primary key field type
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'

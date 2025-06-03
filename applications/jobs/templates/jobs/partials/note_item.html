@@ -1,0 +1,9 @@
+<div class="note-item">
+    <div class="note-header">
+        <span class="note-author">{{ note.author.get_full_name|default:note.author.username }}</span>
+        <span class="note-date">{{ note.created_at|date:"M d, Y, g:i a" }}</span>
+    </div>
+    <div class="note-content">
+        {{ note.content|linebreaks }}
+    </div>
+</div>

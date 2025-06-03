@@ -1,0 +1,160 @@
+[
+  {
+    "model": "jobs.jobpriority",
+    "pk": 1,
+    "fields": {
+      "name": "Low",
+      "value": 1,
+      "color": "#28a745",
+      "icon": "fa-flag"
+    }
+  },
+  {
+    "model": "jobs.jobpriority",
+    "pk": 2,
+    "fields": {
+      "name": "Medium",
+      "value": 2,
+      "color": "#fd7e14",
+      "icon": "fa-flag"
+    }
+  },
+  {
+    "model": "jobs.jobpriority",
+    "pk": 3,
+    "fields": {
+      "name": "High",
+      "value": 3,
+      "color": "#dc3545",
+      "icon": "fa-flag"
+    }
+  },
+  {
+    "model": "jobs.jobpriority",
+    "pk": 4,
+    "fields": {
+      "name": "Critical",
+      "value": 4,
+      "color": "#721c24",
+      "icon": "fa-exclamation-triangle"
+    }
+  },
+  {
+    "model": "jobs.jobtype",
+    "pk": 1,
+    "fields": {
+      "name": "Tower Maintenance",
+      "description": "Regular maintenance of tower equipment",
+      "estimated_duration": 240,
+      "company": "wisp",
+      "requires_civil_team": false,
+      "color": "#6f42c1",
+      "icon": "fa-broadcast-tower"
+    }
+  },
+  {
+    "model": "jobs.jobtype",
+    "pk": 2,
+    "fields": {
+      "name": "Radio Installation",
+      "description": "Installation of new radio equipment",
+      "estimated_duration": 360,
+      "company": "wisp",
+      "requires_civil_team": false,
+      "color": "#007bff",
+      "icon": "fa-wifi"
+    }
+  },
+  {
+    "model": "jobs.jobtype",
+    "pk": 3,
+    "fields": {
+      "name": "Fiber Installation",
+      "description": "Installation of new fiber connections",
+      "estimated_duration": 480,
+      "company": "fno",
+      "requires_civil_team": true,
+      "color": "#20c997",
+      "icon": "fa-network-wired"
+    }
+  },
+  {
+    "model": "jobs.jobtype",
+    "pk": 4,
+    "fields": {
+      "name": "Fiber Repair",
+      "description": "Repair of damaged fiber connections",
+      "estimated_duration": 240,
+      "company": "fno",
+      "requires_civil_team": true,
+      "color": "#dc3545",
+      "icon": "fa-tools"
+    }
+  },
+  {
+    "model": "jobs.jobtype",
+    "pk": 5,
+    "fields": {
+      "name": "Network Outage",
+      "description": "Emergency response to network outages",
+      "estimated_duration": 180,
+      "company": "both",
+      "requires_civil_team": false,
+      "color": "#dc3545",
+      "icon": "fa-exclamation-circle"
+    }
+  },
+  {
+    "model": "jobs.jobtype",
+    "pk": 6,
+    "fields": {
+      "name": "Customer Installation",
+      "description": "New customer equipment installation",
+      "estimated_duration": 240,
+      "company": "both",
+      "requires_civil_team": false,
+      "color": "#28a745",
+      "icon": "fa-user-plus"
+    }
+  },
+  {
+    "model": "jobs.team",
+    "pk": 1,
+    "fields": {
+      "name": "Tower Team A",
+      "description": "Primary tower maintenance team",
+      "team_type": "tower",
+      "is_active": true
+    }
+  },
+  {
+    "model": "jobs.team",
+    "pk": 2,
+    "fields": {
+      "name": "FNO Team 1",
+      "description": "Fiber network operations team",
+      "team_type": "fno",
+      "is_active": true
+    }
+  },
+  {
+    "model": "jobs.team",
+    "pk": 3,
+    "fields": {
+      "name": "Civil Support Team",
+      "description": "Civil works and trenching team",
+      "team_type": "civil",
+      "is_active": true
+    }
+  },
+  {
+    "model": "jobs.team",
+    "pk": 4,
+    "fields": {
+      "name": "Emergency Response Team",
+      "description": "On-call team for urgent issues",
+      "team_type": "support",
+      "is_active": true
+    }
+  }
+]

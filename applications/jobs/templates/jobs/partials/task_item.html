@@ -1,0 +1,20 @@
+<div class="task-item {% if task.is_completed %}task-completed{% endif %}">
+    <div class="form-check">
+        <input class="form-check-input task-checkbox" type="checkbox"
+               {% if task.is_completed %}checked{% endif %}
+               hx-post="{% url 'jobs:toggle_task' task.pk %}"
+               hx-swap="outerHTML"
+               hx-target="closest .task-item">
+        <label class="form-check-label">
+            {{ task.description }}
+        </label>
+    </div>
+    {% if task.completed_at %}
+        <span class="ms-auto text-muted small">
+            Completed {{ task.completed_at|date:"M d, Y" }}
+            {% if task.completed_by %}
+                by {{ task.completed_by.get_full_name|default:task.completed_by.username }}
+            {% endif %}
+        </span>
+    {% endif %}
+</div>

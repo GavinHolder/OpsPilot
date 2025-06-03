@@ -1,0 +1,17 @@
+<div class="subtask-item {% if subtask.is_completed %}subtask-completed{% endif %}">
+    <div class="form-check">
+        <input class="form-check-input subtask-checkbox" type="checkbox"
+               {% if subtask.is_completed %}checked{% endif %}
+               hx-post="{% url 'tasks:toggle_subtask' subtask.pk %}"
+               hx-swap="outerHTML"
+               hx-target="closest .subtask-item">
+        <label class="form-check-label">
+            {{ subtask.description }}
+        </label>
+    </div>
+    {% if subtask.completed_at %}
+        <span class="ms-auto text-muted small">
+            Completed {{ subtask.completed_at|date:"M d, Y" }}
+        </span>
+    {% endif %}
+</div>

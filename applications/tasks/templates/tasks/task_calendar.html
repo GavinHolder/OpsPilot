@@ -1,0 +1,324 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Task Calendar | OpsPilot{% endblock %}
+
+{% block tasks_active %}active{% endblock %}
+
+{% block extra_css %}
+<style>
+    .calendar-container {
+        background-color: #fff;
+        border-radius: 8px;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        padding: 20px;
+    }
+    .calendar-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 20px;
+    }
+    .calendar-title {
+        font-size: 1.5rem;
+        font-weight: 600;
+    }
+    .calendar-nav {
+        display: flex;
+        gap: 10px;
+    }
+    .calendar-table {
+        width: 100%;
+        border-collapse: collapse;
+    }
+    .calendar-table th {
+        padding: 10px;
+        text-align: center;
+        font-weight: 600;
+    }
+    .calendar-table td {
+        height: 120px;
+        border: 1px solid #dee2e6;
+        vertical-align: top;
+        padding: 5px;
+    }
+    .calendar-day {
+        font-weight: 600;
+        margin-bottom: 5px;
+    }
+    .today {
+        background-color: rgba(13, 110, 253, 0.05);
+    }
+    .other-month {
+        background-color: #f8f9fa;
+        color: #adb5bd;
+    }
+    .task-item {
+        font-size: 0.8rem;
+        padding: 3px 5px;
+        margin-bottom: 3px;
+        border-radius: 3px;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+        cursor: pointer;
+    }
+    .task-pending {
+        background-color: #fff3cd;
+    }
+    .task-in-progress {
+        background-color: #cff4fc;
+    }
+    .task-completed {
+        background-color: #d1e7dd;
+        text-decoration: line-through;
+    }
+    .task-overdue {
+        background-color: #f8d7da;
+    }
+    .add-task-link {
+        display: block;
+        margin-top: 5px;
+        font-size: 0.8rem;
+        color: #6c757d;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h1>Task Calendar</h1>
+        <div class="d-flex">
+            <div class="btn-group me-2">
+                <a href="{% url 'tasks:task_list' %}" class="btn btn-outline-secondary">
+                    <i class="fas fa-list"></i> List
+                </a>
+                <a href="{% url 'tasks:task_board' %}" class="btn btn-outline-secondary">
+                    <i class="fas fa-columns"></i> Board
+                </a>
+                <a href="{% url 'tasks:task_calendar' %}" class="btn btn-outline-secondary active">
+                    <i class="fas fa-calendar-alt"></i> Calendar
+                </a>
+            </div>
+            <a href="{% url 'tasks:task_create' %}" class="btn btn-primary">
+                <i class="fas fa-plus-circle"></i> New Task
+            </a>
+        </div>
+    </div>
+    
+    <div class="calendar-container">
+        <div class="calendar-header">
+            <div class="calendar-title">June 2025</div>
+            <div class="calendar-nav">
+                <button class="btn btn-outline-secondary">
+                    <i class="fas fa-chevron-left"></i> Previous
+                </button>
+                <button class="btn btn-outline-primary">
+                    Today
+                </button>
+                <button class="btn btn-outline-secondary">
+                    Next <i class="fas fa-chevron-right"></i>
+                </button>
+            </div>
+        </div>
+        
+        <table class="calendar-table">
+            <thead>
+                <tr>
+                    <th>Sunday</th>
+                    <th>Monday</th>
+                    <th>Tuesday</th>
+                    <th>Wednesday</th>
+                    <th>Thursday</th>
+                    <th>Friday</th>
+                    <th>Saturday</th>
+                </tr>
+            </thead>
+            <tbody>
+                <!-- Week 1 -->
+                <tr>
+                    <td class="other-month">
+                        <div class="calendar-day">25</div>
+                        <div class="task-item task-pending">Follow up with supplier</div>
+                    </td>
+                    <td class="other-month">
+                        <div class="calendar-day">26</div>
+                    </td>
+                    <td class="other-month">
+                        <div class="calendar-day">27</div>
+                    </td>
+                    <td class="other-month">
+                        <div class="calendar-day">28</div>
+                    </td>
+                    <td class="other-month">
+                        <div class="calendar-day">29</div>
+                        <div class="task-item task-in-progress">Tower maintenance review</div>
+                    </td>
+                    <td class="other-month">
+                        <div class="calendar-day">30</div>
+                    </td>
+                    <td class="other-month">
+                        <div class="calendar-day">31</div>
+                    </td>
+                </tr>
+                
+                <!-- Week 2 -->
+                <tr>
+                    <td>
+                        <div class="calendar-day">1</div>
+                        <div class="task-item task-overdue">Order fiber cables</div>
+                        <div class="task-item task-in-progress">Team meeting prep</div>
+                    </td>
+                    <td>
+                        <div class="calendar-day">2</div>
+                    </td>
+                    <td class="today">
+                        <div class="calendar-day">3</div>
+                        <div class="task-item task-pending">Call FNO client</div>
+                        <div class="task-item task-pending">Review stock levels</div>
+                        <a href="{% url 'tasks:quick_add_task' %}?date=2025-06-03" class="add-task-link">
+                            + Add task
+                        </a>
+                    </td>
+                    <td>
+                        <div class="calendar-day">4</div>
+                        <div class="task-item task-in-progress">WISP quarterly review</div>
+                    </td>
+                    <td>
+                        <div class="calendar-day">5</div>
+                    </td>
+                    <td>
+                        <div class="calendar-day">6</div>
+                        <div class="task-item task-pending">Submit fiber plan</div>
+                    </td>
+                    <td>
+                        <div class="calendar-day">7</div>
+                    </td>
+                </tr>
+                
+                <!-- Week 3 -->
+                <tr>
+                    <td>
+                        <div class="calendar-day">8</div>
+                    </td>
+                    <td>
+                        <div class="calendar-day">9</div>
+                        <div class="task-item task-pending">Monthly reports</div>
+                    </td>
+                    <td>
+                        <div class="calendar-day">10</div>
+                    </td>
+                    <td>
+                        <div class="calendar-day">11</div>
+                    </td>
+                    <td>
+                        <div class="calendar-day">12</div>
+                        <div class="task-item task-pending">Tower team meeting</div>
+                    </td>
+                    <td>
+                        <div class="calendar-day">13</div>
+                    </td>
+                    <td>
+                        <div class="calendar-day">14</div>
+                    </td>
+                </tr>
+                
+                <!-- Week 4 -->
+                <tr>
+                    <td>
+                        <div class="calendar-day">15</div>
+                    </td>
+                    <td>
+                        <div class="calendar-day">16</div>
+                    </td>
+                    <td>
+                        <div class="calendar-day">17</div>
+                        <div class="task-item task-pending">Budget review</div>
+                    </td>
+                    <td>
+                        <div class="calendar-day">18</div>
+                    </td>
+                    <td>
+                        <div class="calendar-day">19</div>
+                    </td>
+                    <td>
+                        <div class="calendar-day">20</div>
+                        <div class="task-item task-pending">Vendor meeting</div>
+                    </td>
+                    <td>
+                        <div class="calendar-day">21</div>
+                    </td>
+                </tr>
+                
+                <!-- Week 5 -->
+                <tr>
+                    <td>
+                        <div class="calendar-day">22</div>
+                    </td>
+                    <td>
+                        <div class="calendar-day">23</div>
+                    </td>
+                    <td>
+                        <div class="calendar-day">24</div>
+                    </td>
+                    <td>
+                        <div class="calendar-day">25</div>
+                        <div class="task-item task-pending">Quarter-end review</div>
+                    </td>
+                    <td>
+                        <div class="calendar-day">26</div>
+                    </td>
+                    <td>
+                        <div class="calendar-day">27</div>
+                    </td>
+                    <td>
+                        <div class="calendar-day">28</div>
+                    </td>
+                </tr>
+                
+                <!-- Week 6 -->
+                <tr>
+                    <td>
+                        <div class="calendar-day">29</div>
+                    </td>
+                    <td>
+                        <div class="calendar-day">30</div>
+                    </td>
+                    <td class="other-month">
+                        <div class="calendar-day">1</div>
+                    </td>
+                    <td class="other-month">
+                        <div class="calendar-day">2</div>
+                    </td>
+                    <td class="other-month">
+                        <div class="calendar-day">3</div>
+                    </td>
+                    <td class="other-month">
+                        <div class="calendar-day">4</div>
+                    </td>
+                    <td class="other-month">
+                        <div class="calendar-day">5</div>
+                    </td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Make task items clickable
+        const taskItems = document.querySelectorAll('.task-item');
+        taskItems.forEach(item => {
+            item.addEventListener('click', function() {
+                // In a real implementation, this would navigate to the task detail page
+                // For now, just alert the task name
+                alert('View task: ' + this.textContent);
+            });
+        });
+    });
+</script>
+{% endblock %}

@@ -1,0 +1,52 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Delete Task | OpsPilot{% endblock %}
+
+{% block tasks_active %}active{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row justify-content-center">
+        <div class="col-lg-6">
+            <!-- Breadcrumb -->
+            <nav aria-label="breadcrumb" class="mb-4">
+                <ol class="breadcrumb">
+                    <li class="breadcrumb-item"><a href="{% url 'dashboard:index' %}">Dashboard</a></li>
+                    <li class="breadcrumb-item"><a href="{% url 'tasks:task_list' %}">Tasks</a></li>
+                    <li class="breadcrumb-item"><a href="{% url 'tasks:task_detail' task.pk %}">{{ task.title }}</a></li>
+                    <li class="breadcrumb-item active" aria-current="page">Delete</li>
+                </ol>
+            </nav>
+            
+            <div class="card">
+                <div class="card-header bg-danger text-white">
+                    <h5 class="mb-0">Delete Task</h5>
+                </div>
+                <div class="card-body">
+                    <p>Are you sure you want to delete the task <strong>"{{ task.title }}"</strong>?</p>
+                    <p>This action cannot be undone and will delete:</p>
+                    <ul>
+                        <li>All subtasks</li>
+                        <li>All comments</li>
+                        <li>All attachments</li>
+                        <li>All voice notes</li>
+                    </ul>
+                    
+                    <form method="post">
+                        {% csrf_token %}
+                        <div class="d-flex justify-content-between mt-4">
+                            <a href="{% url 'tasks:task_detail' task.pk %}" class="btn btn-secondary">
+                                Cancel
+                            </a>
+                            <button type="submit" class="btn btn-danger">
+                                Delete Task
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
